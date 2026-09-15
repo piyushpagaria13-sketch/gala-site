@@ -40,7 +40,6 @@ const POP_MARGIN = 8;
 export function TableMap() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const [data, setData] = useState<FloorData | null>(null);
-  const [loadError, setLoadError] = useState(false);
   const [popover, setPopover] = useState<{
     table: FloorTable;
     left: number;
@@ -49,7 +48,6 @@ export function TableMap() {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
-    setLoadError(false);
     try {
       const supabase = getSupabaseClient();
       const [bookingsRes, tablesRes] = await Promise.all([
@@ -77,7 +75,6 @@ export function TableMap() {
       setData({ booked, blocked });
     } catch {
       setData(null);
-      setLoadError(true);
     }
   }, []);
 
@@ -154,21 +151,6 @@ export function TableMap() {
         <p className="mt-2 text-center text-[14px] text-[#9a7f3e]">
           Tap any open table to see space for your party of {partySize}.
         </p>
-      )}
-
-      {loadError && (
-        <div className="mt-4 flex w-full max-w-[560px] items-center justify-between gap-4 rounded-[8px] border border-[rgba(224,147,125,0.35)] bg-[rgba(224,147,125,0.08)] px-3 py-[10px]">
-          <p className="text-[12px] leading-[1.5] text-[#e0937d]">
-            Couldn&apos;t load live availability. Please retry.
-          </p>
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="shrink-0 rounded-pill border border-[#8a6f35] px-4 py-[6px] text-[12px] font-medium text-[#e8d9a8]"
-          >
-            Retry
-          </button>
-        </div>
       )}
 
       <div className="mt-6 w-full overflow-x-auto pb-4">

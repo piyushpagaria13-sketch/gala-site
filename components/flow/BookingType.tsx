@@ -9,26 +9,26 @@ import { useBookingDraft, type BookingKind } from "@/lib/bookingDraft";
  * (253:15) and "D2b · Booking type — seats selected (dark)" (253:49).
  * Selecting a card marks the step valid; the selected card gets a gold
  * border, glow, and check badge.
- * TODO: replace the placeholder illustration slots with final artwork.
+ * Card illustrations live in public/book/.
  */
 
 const OPTIONS: {
   kind: BookingKind;
   title: string;
   caption: string;
-  slotLabel: string;
+  image: string;
 }[] = [
   {
     kind: "table",
     title: "Book a table",
     caption: "Seats 10 guests",
-    slotLabel: "table illustration",
+    image: "/book/table-illustration.jpg",
   },
   {
     kind: "seats",
     title: "Book seats",
     caption: "Join a table",
-    slotLabel: "chair illustration",
+    image: "/book/chair-illustration.jpg",
   },
 ];
 
@@ -58,7 +58,7 @@ export function BookingType() {
               type="button"
               aria-pressed={selected}
               onClick={() => select(option.kind)}
-              className={`relative flex w-[270px] flex-col items-center rounded-card-lg px-[22px] pb-7 pt-[30px] text-center transition-colors ${
+              className={`relative flex w-[270px] flex-col items-center overflow-hidden rounded-card-lg px-[22px] pb-7 pt-0 text-center transition-colors ${
                 selected
                   ? "border-[3px] border-gold bg-[#241d0f] shadow-[0px_0px_28px_0px_rgba(212,175,55,0.14)]"
                   : "border border-[#6e5a2b] bg-[#1a1610]"
@@ -73,25 +73,17 @@ export function BookingType() {
                   className="absolute right-[15px] top-[9px]"
                 />
               )}
-              <span className="flex h-[150px] w-full items-center justify-center">
-                <span className="flex flex-col items-center gap-2">
-                  <Image
-                    src="/book/icon-photo.svg"
-                    alt=""
-                    width={28}
-                    height={24}
-                  />
-                  <span
-                    className={`text-[12px] ${
-                      selected ? "text-[#9a7f3e]" : "text-[#77633a]"
-                    }`}
-                  >
-                    {option.slotLabel}
-                  </span>
-                </span>
+              <span className="relative -mx-[22px] mb-[14px] flex h-[168px] w-[calc(100%+44px)] items-center justify-center bg-white">
+                <Image
+                  src={option.image}
+                  alt=""
+                  fill
+                  sizes="270px"
+                  className="object-contain"
+                />
               </span>
               <span
-                className={`mt-[14px] text-[20px] font-medium ${
+                className={`text-[20px] font-medium ${
                   selected ? "text-[#e8d9a8]" : "text-[#d9bd6f]"
                 }`}
               >

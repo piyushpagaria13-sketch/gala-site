@@ -147,7 +147,7 @@ export function TablePopover({
 
         {selected && (
           <p className="mt-1 text-[13px] text-[#9a7f3e]">
-            {booked ?? 0} of {TABLE_CAPACITY} filled · your {partySize}{" "}
+            {shown ?? 0} of {TABLE_CAPACITY} filled · your {partySize}{" "}
             {partySize === 1 ? "seat" : "seats"} selected
           </p>
         )}
