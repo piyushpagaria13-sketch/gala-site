@@ -1,0 +1,7 @@
+-- TODO: locked RPC create_booking
+--   1. row lock on the target table
+--   2. recount remaining seats (derived: 10 minus sum of party sizes of
+--      non-cancelled bookings)
+--   3. reject if party > remaining OR table is blocked
+--   4. else insert booking (status awaiting_payment) + guests
+--   5. generate ref GALA-NNNN and return it

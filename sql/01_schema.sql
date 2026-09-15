@@ -1,0 +1,7 @@
+-- Seats remaining is NEVER stored — always derived: 10 minus sum of
+-- party sizes of non-cancelled bookings.
+--
+-- TODO: students
+-- TODO: tables (1–100, blocked flag on 6/15/88)
+-- TODO: bookings
+-- TODO: guests

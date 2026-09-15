@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy-bg: #0b1526;
+  --navy-mid: #101d33;
+  --gold: #d4af37;
+  --gold-deep: #b8912a;
+  --gold-pale: #f3dc9a;
+  --card: #ffffff;
+  --ink: #101d33;
+  --ink-soft: #4d5b73;
+  --error: #e0937d;
+}
+
+body {
+  @apply bg-navy-bg font-sans text-card antialiased;
+}
+
+/* Mobile bottom-sheet entrance (table popover < 640px). */
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
