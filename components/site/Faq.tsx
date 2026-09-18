@@ -25,7 +25,7 @@ const FAQ_ITEMS = [
   {
     question: "How much are tickets?",
     answer:
-      "S$120 per seat, or S$1,100 for a full table of 10. [Placeholder — confirm pricing from the PA doc.] The price covers the sit-down dinner, champagne toast (non-alcoholic options included), photo booths and the DJ.",
+      "S$218 per seat, or S$2,180 for a full table of 10. There is no booking fee. The price covers the sit-down dinner, champagne toast (non-alcoholic options included), photo booths and the DJ.",
   },
   {
     question: "Who do I book under?",

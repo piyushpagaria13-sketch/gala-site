@@ -5,19 +5,17 @@ import { useId } from "react";
 import type { Guest } from "@/lib/types";
 
 /**
- * One attendee card on the "Who's coming?" grid — Name, Age and a Dietary
+ * One attendee card on the "Who's coming?" grid — Name and a Dietary
  * restriction select. The student card carries a GRADUATE badge and a darker
  * name field (prefilled from the first step).
  */
 
 export const DIETARY_OPTIONS = [
-  "None",
   "Vegetarian",
-  "Vegan",
-  "Halal",
-  "Kosher",
+  "Chicken",
+  "Fish",
   "Gluten-free",
-  "Other",
+  "Vegan",
 ];
 
 const FIELD =
@@ -88,26 +86,6 @@ export function GuestCard({
           placeholder="Full name"
           onChange={(e) => onChange({ ...guest, name: e.target.value })}
           className={`${FIELD} ${badge ? "bg-[#131008]" : "bg-[#1a1610]"}`}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-col gap-[6px]">
-        <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-age`}>
-          Age
-        </label>
-        <input
-          id={`${id}-age`}
-          type="text"
-          inputMode="numeric"
-          value={guest.age ?? ""}
-          placeholder="—"
-          onChange={(e) =>
-            onChange({
-              ...guest,
-              age: e.target.value.replace(/\D/g, "").slice(0, 3),
-            })
-          }
-          className={`${FIELD} bg-[#1a1610]`}
         />
       </div>
 

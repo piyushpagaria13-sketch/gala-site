@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Stepper } from "@/components/ui/Stepper";
-import { useBookingDraft } from "@/lib/bookingDraft";
-import { TABLE_CAPACITY } from "@/lib/floorplan";
+import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 
 /**
  * "Shuttle bus" dialog from the review screen — bus seats capped at one per
@@ -19,10 +18,7 @@ export function BusModal({
 }) {
   const { draft, setDraft } = useBookingDraft();
 
-  const maxSeats =
-    draft.type === "table"
-      ? TABLE_CAPACITY
-      : (draft.partySize ?? TABLE_CAPACITY);
+  const maxSeats = partySeatCount(draft);
   const [seats, setSeats] = useState(
     Math.min(Math.max(draft.busSeats, 1), maxSeats),
   );

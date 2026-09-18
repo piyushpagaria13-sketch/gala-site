@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TablePopover } from "@/components/flow/TablePopover";
-import { useBookingDraft } from "@/lib/bookingDraft";
+import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import {
   CANVAS,
   DANCE_FLOOR,
@@ -82,11 +82,7 @@ export function TableMap() {
     void load();
   }, [load]);
 
-  // Whole-table bookings claim all seats regardless of any earlier seat count.
-  const partySize =
-    draft.type === "table"
-      ? TABLE_CAPACITY
-      : (draft.partySize ?? TABLE_CAPACITY);
+  const partySize = partySeatCount(draft);
   const studentName = draft.student?.name ?? "";
 
   const stateOf = (tableNo: number): TableState => {

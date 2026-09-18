@@ -1,7 +1,6 @@
 "use client";
 
-import { useBookingDraft } from "@/lib/bookingDraft";
-import { TABLE_CAPACITY } from "@/lib/floorplan";
+import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 
 /**
  * Center breadcrumb in the flow header. On the table-map step:
@@ -14,10 +13,7 @@ export function FlowBreadcrumb() {
   if (step === "student" || step === "type" || step === "done") return null;
 
   const student = draft.student?.name ?? "";
-  const seats =
-    draft.type === "table"
-      ? TABLE_CAPACITY
-      : (draft.partySize ?? TABLE_CAPACITY);
+  const seats = partySeatCount(draft);
   const label =
     step === "review"
       ? "Review your booking"

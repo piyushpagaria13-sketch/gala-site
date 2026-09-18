@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Guest, Student } from "./types";
+import { TABLE_CAPACITY } from "./floorplan";
 
 export type BookingKind = "seats" | "table";
 
@@ -88,9 +89,16 @@ const BookingDraftContext = createContext<BookingDraftContextValue | null>(
 
 const STORAGE_KEY = "gala-booking-draft";
 
-/** A guest card is complete once name, age and dietary choice are filled. */
+/** Seats in this booking — guest cards are the source of truth on the seats path. */
+export function partySeatCount(draft: BookingDraft): number {
+  if (draft.type === "table") return TABLE_CAPACITY;
+  if (draft.guests.length > 0) return draft.guests.length;
+  return draft.partySize ?? 1;
+}
+
+/** A guest card is complete once name and dietary choice are filled. */
 export function isGuestComplete(guest: Guest): boolean {
-  return Boolean(guest.name.trim() && guest.age?.trim() && guest.dietary);
+  return Boolean(guest.name.trim() && guest.dietary);
 }
 
 /** Validity of a step, derived from what the draft already holds. */

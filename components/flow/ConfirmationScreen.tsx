@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useBookingDraft } from "@/lib/bookingDraft";
-import { TABLE_CAPACITY } from "@/lib/floorplan";
+import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 
 /**
  * "You're booked!" — terminal screen after "I've paid". Booking card with the
@@ -21,10 +20,7 @@ export function ConfirmationScreen() {
 
   const student = draft.student?.name ?? "";
   const firstName = student.trim().split(/\s+/)[0] ?? "";
-  const seats =
-    draft.type === "table"
-      ? TABLE_CAPACITY
-      : (draft.partySize ?? draft.guests.length);
+  const seats = partySeatCount(draft);
   const names = draft.guests
     .map((g) => g.name.trim())
     .filter(Boolean)

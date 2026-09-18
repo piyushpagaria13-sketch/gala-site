@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-/** Dashed gold "Add guest" card — hidden by the grid once the party is full. */
+/** Dashed gold "Add another guest" card — hidden once the party is 10. */
 export function AddGuestCard({ onAdd }: { onAdd: () => void }) {
   return (
     <button
@@ -11,7 +11,7 @@ export function AddGuestCard({ onAdd }: { onAdd: () => void }) {
       className="flex h-[260px] w-full flex-col items-center justify-center gap-[10px] rounded-card border-[1.5px] border-dashed border-[#8a6f35] transition-colors hover:border-gold"
     >
       <Image src="/book/icon-add-guest.svg" alt="" width={48} height={48} />
-      <span className="text-[16px] font-medium text-gold">Add guest</span>
+      <span className="text-[16px] font-medium text-gold">Add another guest</span>
     </button>
   );
 }

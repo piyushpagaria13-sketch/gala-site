@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useBookingDraft } from "@/lib/bookingDraft";
-import { TABLE_CAPACITY } from "@/lib/floorplan";
-
-/** Per-seat price — keep in sync with ReviewScreen. */
-const SEAT_PRICE = 120;
+import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
+import { SEAT_PRICE } from "@/lib/pricing";
 
 /**
  * "Pay using PayNow" — shown after Confirm & pay. QR card with the amount and
@@ -33,10 +30,7 @@ export function PayNowScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ref]);
 
-  const seats =
-    draft.type === "table"
-      ? TABLE_CAPACITY
-      : (draft.partySize ?? draft.guests.length);
+  const seats = partySeatCount(draft);
   const total = seats * SEAT_PRICE;
 
   const handlePaid = () => {
