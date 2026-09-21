@@ -15,7 +15,7 @@ const FAQ_ITEMS = [
   {
     question: "When and where is the Gala Dinner?",
     answer:
-      "Saturday, 22 May 2027 at the Fairmont Ballroom, Raffles City Convention Centre, 80 Bras Basah Road. Doors open at 7:30 PM, with dinner served from 8:00 PM. The evening runs until midnight.",
+      "Saturday, 22 May 2027 at the Fairmont Ballroom, Raffles City Convention Centre, 80 Bras Basah Road. Doors open at 7:30 PM, with dinner served from 8:00 PM.",
   },
   {
     question: "Who organises the Gala?",
@@ -39,8 +39,18 @@ const FAQ_ITEMS = [
   },
   {
     question: "How do I pay?",
-    answer:
-      "By PayNow. After confirming your seats you'll see a QR code and a booking reference (e.g. GALA-0231). Add the reference to your transfer so the PA can match your payment — your booking is confirmed once it's verified.",
+    answer: (
+      <>
+        By PayNow. After confirming your seats you&apos;ll see a QR code and a
+        booking reference GALA27. Add the reference GALA27 to your transfer so
+        the PA can match your payment.{" "}
+        <strong className="font-bold">
+          Remember to get a screenshot of your payment.
+        </strong>{" "}
+        Your bookings will be confirmed upon verification of your payment via
+        the uploaded screenshot.
+      </>
+    ),
   },
   {
     question: "What about dietary requirements?",
@@ -55,7 +65,7 @@ const FAQ_ITEMS = [
   {
     question: "What's the dress code, and can I get a refund?",
     answer:
-      "Formal — black tie optional. [Placeholder — confirm refund policy and deadline from the PA doc.] Contact your Grade Rep for changes or transfers.",
+      "Formal — black tie optional. Tickets cannot be refunded or returned, but can be transferred only with the involvement of the organisers.",
   },
 ];
 
@@ -160,10 +170,10 @@ export function Faq() {
       <p className="mt-8 px-4 text-center text-[14px] text-[#8fa0bd]">
         Still have a question? Your Grade Rep is the fastest route — or email{" "}
         <a
-          href="mailto:gala2027@example.edu.sg"
+          href="mailto:Padovergraduation@gapps.uwcsea.edu.sg"
           className="text-gold underline [text-underline-position:from-font]"
         >
-          gala2027@example.edu.sg
+          Padovergraduation@gapps.uwcsea.edu.sg
         </a>
       </p>
     </section>
