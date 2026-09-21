@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { DIETARY_OPTIONS } from "@/components/flow/GuestCard";
 
 /**
  * FAQ section — Figma frames "FAQ / all closed" (262:303) and
@@ -54,13 +55,14 @@ const FAQ_ITEMS = [
   },
   {
     question: "What about dietary requirements?",
-    answer:
-      "You'll choose a dietary option for each guest while booking — vegetarian, vegan, halal, gluten-free or none — and can note any allergies so the kitchen can plan for them.",
+    answer: `You'll choose a dietary option for each guest while booking — ${
+      DIETARY_OPTIONS.slice(0, -1).join(", ")
+    } or ${DIETARY_OPTIONS[DIETARY_OPTIONS.length - 1]} — and can note any allergies so the kitchen can plan for them.`,
   },
   {
     question: "Is there parking or a shuttle?",
     answer:
-      "Raffles City has on-site parking, and you can request parking passes or shuttle bus seats while reviewing your booking. [Placeholder — confirm arrangements from the PA doc.]",
+      "Raffles City has on-site parking, and you can request complimentary parking passes or shuttle bus seats while reviewing your booking.",
   },
   {
     question: "What's the dress code, and can I get a refund?",
