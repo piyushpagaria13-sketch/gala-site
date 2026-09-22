@@ -43,7 +43,7 @@ create table if not exists guests (
 );
 
 insert into tables (table_no, blocked)
-select g, g in (6, 15, 88)
+select g, false
 from generate_series(1, 100) as g
 on conflict (table_no) do nothing;
 

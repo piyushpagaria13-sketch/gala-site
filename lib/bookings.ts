@@ -4,7 +4,7 @@ import type { BookingStatus, Guest } from "@/lib/types";
 export type CreateBookingInput = {
   tableNo: number;
   partySize: number;
-  studentId: string;
+  studentId: string | null;
   guests: Guest[];
   cars: number;
   busSeats: number;

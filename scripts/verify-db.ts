@@ -36,11 +36,8 @@ const CARS = 1;
 const CONTACT = "+65 8111 0000";
 const TEST_EMAIL = "db-verify@gala.invalid";
 
-/**
- * sql/01_schema.sql seeds 6, 15, 88. lib/config.ts has no blocked-table list;
- * this is the only source of truth in the repo.
- */
-const EXPECTED_BLOCKED = [6, 15, 88];
+/** sql/01_schema.sql seeds every table as open. */
+const EXPECTED_BLOCKED: number[] = [];
 
 const EXPECTED_STUDENTS: { name: string; comp_seats: number }[] = [
   { name: "Aryan Tan", comp_seats: 2 },
@@ -84,7 +81,7 @@ const SQL = {
   compSeats: sqlFile("04_comp_seats.sql"),
   seedStudents: sqlFile("03_seed.sql"),
   seedTables: `insert into tables (table_no, blocked)
-select g, g in (6, 15, 88)
+select g, false
 from generate_series(1, 100) as g
 on conflict (table_no) do update set blocked = excluded.blocked;
 
@@ -410,7 +407,7 @@ async function main() {
       const expectedBlocked = [...EXPECTED_BLOCKED].sort((a, b) => a - b);
       if (blockedFromDb.join(",") !== expectedBlocked.join(",")) {
         seedIssues.push(
-          `blocked tables [${blockedFromDb.join(", ") || "none"}]; expected [${expectedBlocked.join(", ")}] from sql/01_schema.sql (lib/config.ts does not export a blocked-table list)`,
+          `blocked tables [${blockedFromDb.join(", ") || "none"}]; expected [${expectedBlocked.join(", ") || "none"}]`,
         );
       }
     }
@@ -428,7 +425,7 @@ async function main() {
     } else {
       pass(
         "Seed",
-        "10 test students (Aryan Tan / Aryan Mehta / Mei Ling Wong comp_seats=2, other 7 = 0); 100 tables; blocked 6, 15, 88",
+        "10 test students (Aryan Tan / Aryan Mehta / Mei Ling Wong comp_seats=2, other 7 = 0); 100 tables; none blocked",
       );
     }
 
@@ -479,7 +476,7 @@ async function main() {
     const { data: inserted, error: insertErr } = await anon.from("bookings").insert({
       ref: insertRef,
       status: "awaiting_payment",
-      table_no: blockedFromDb[0] ?? EXPECTED_BLOCKED[0],
+      table_no: 1,
       party_size: 1,
       amount: 0,
     }).select("id");
@@ -682,7 +679,10 @@ async function main() {
         );
       }
 
-      const blockedNo = blockedFromDb[0] ?? EXPECTED_BLOCKED[0];
+      const blockedNo = blockedFromDb[0];
+      if (blockedNo == null) {
+        pass("Round-trip blocked table", "no tables are blocked");
+      } else {
       const blocked = await rpcCreate(service, {
         p_table_no: blockedNo,
         p_party_size: PARTY,
@@ -716,6 +716,7 @@ async function main() {
           { title: "Replace create_booking", sql: SQL.rpc, order: 4 },
         );
       }
+      }
     } else {
       fail("Round-trip bus cap", "skipped — Aryan Tan not found");
       fail("Round-trip blocked table", "skipped — Aryan Tan not found");
@@ -748,7 +749,7 @@ function printSummary() {
   console.log("Order: 01_schema.sql → 04_comp_seats.sql → 03_seed.sql → 02_create_booking.sql\n");
   if (emptyProject) {
     for (const [title, sql] of [
-      ["1. sql/01_schema.sql — tables, sequence, RLS, tables 1–100 (blocked 6, 15, 88)", SQL.schema],
+      ["1. sql/01_schema.sql — tables, sequence, RLS, tables 1–100 (none blocked)", SQL.schema],
       ["2. sql/04_comp_seats.sql — students.comp_seats", SQL.compSeats],
       ["3. sql/03_seed.sql — 10 test students", SQL.seedStudents],
       ["4. sql/02_create_booking.sql — create_booking RPC", SQL.rpc],

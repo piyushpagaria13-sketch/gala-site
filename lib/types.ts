@@ -6,9 +6,13 @@ export type BookingStatus =
 
 export type Student = {
   id: string;
+  /** Display name — preferred_name + " " + family_name when present. */
   name: string;
   grade?: string;
   compSeats: number;
+  preferredName?: string;
+  officialName?: string;
+  familyName?: string;
 };
 
 export type Guest = {
@@ -16,6 +20,8 @@ export type Guest = {
   age?: string;
   dietary?: string;
   allergyNote?: string;
+  /** Table bookings can include extra graduates. The first student cannot be removed. */
+  kind?: "student" | "guest";
 };
 
 export type Booking = {

@@ -5,30 +5,34 @@ import { Stepper } from "@/components/ui/Stepper";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 
 /**
- * "Shuttle bus" dialog from the review screen — bus seats capped at one per
- * guest in the booking. Saved into the draft only; nothing hits Supabase
- * until Confirm & pay.
+ * Quantity dialog shared by car parking and the shuttle bus. The count is
+ * capped at one per guest and saved into the draft only — nothing hits
+ * Supabase until Confirm & pay.
  */
-export function BusModal({
+export function CountModal({
   open,
   onClose,
+  titleId,
+  title,
+  description,
+  fieldLabel,
+  saved,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  titleId: string;
+  title: string;
+  description: string;
+  fieldLabel: string;
+  saved: number;
+  onSave: (count: number) => void;
 }) {
-  const { draft, setDraft } = useBookingDraft();
-
+  const { draft } = useBookingDraft();
   const maxSeats = partySeatCount(draft);
-  const [seats, setSeats] = useState(
-    Math.min(Math.max(draft.busSeats, 1), maxSeats),
-  );
+  const [count, setCount] = useState(Math.min(Math.max(saved, 1), maxSeats));
 
   if (!open) return null;
-
-  const handleSave = () => {
-    setDraft({ ...draft, busSeats: seats });
-    onClose();
-  };
 
   return (
     <div
@@ -36,25 +40,25 @@ export function BusModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="bus-dialog-title"
+      aria-labelledby={titleId}
     >
       <div
         className="w-full max-w-[460px] rounded-[24px] border-[0.5px] border-[rgba(212,175,55,0.4)] bg-[#1c1710] px-8 pb-7 pt-8"
         onClick={(e) => e.stopPropagation()}
       >
         <h2
-          id="bus-dialog-title"
+          id={titleId}
           className="font-display text-[24px] font-medium text-[#e3c46a]"
         >
-          Shuttle bus
+          {title}
         </h2>
         <p className="mt-2 text-[15px] leading-[1.5] text-[#9a7f3e]">
-          Runs between Dover campus and the ballroom before and after the gala.
+          {description}
         </p>
 
-        <p className="mt-[22px] text-[12px] text-[#9a7f3e]">Bus seats</p>
+        <p className="mt-[22px] text-[12px] text-[#9a7f3e]">{fieldLabel}</p>
         <div className="mt-[6px]">
-          <Stepper value={seats} min={1} max={maxSeats} onChange={setSeats} />
+          <Stepper value={count} min={1} max={maxSeats} onChange={setCount} />
         </div>
         <p className="mt-2 text-[12px] text-[#77633a]">
           Up to {maxSeats} — one per guest
@@ -70,7 +74,10 @@ export function BusModal({
           </button>
           <button
             type="button"
-            onClick={handleSave}
+            onClick={() => {
+              onSave(count);
+              onClose();
+            }}
             className="rounded-[12px] bg-gold px-7 py-[13px] text-[16px] font-semibold text-[#241a06]"
           >
             Save
@@ -78,5 +85,29 @@ export function BusModal({
         </div>
       </div>
     </div>
+  );
+}
+
+/** "Shuttle bus" dialog from the review screen. */
+export function BusModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { draft, setDraft } = useBookingDraft();
+
+  return (
+    <CountModal
+      open={open}
+      onClose={onClose}
+      titleId="bus-dialog-title"
+      title="Shuttle bus"
+      description="Runs between Dover campus and the ballroom before and after the gala."
+      fieldLabel="Bus seats"
+      saved={draft.busSeats}
+      onSave={(busSeats) => setDraft({ ...draft, busSeats })}
+    />
   );
 }

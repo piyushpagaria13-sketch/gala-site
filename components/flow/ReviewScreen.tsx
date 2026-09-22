@@ -2,19 +2,19 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { BusModal } from "@/components/flow/BusModal";
-import { Stepper } from "@/components/ui/Stepper";
+import { BusModal, CountModal } from "@/components/flow/BusModal";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
 
 /**
  * "Almost there" — review before Confirm & pay. Left: YOUR SEATS card with
- * the guest list plus car-parking toggle and optional Shuttle bus.
+ * the guest list plus optional car parking and Shuttle bus.
  * Right: PAYMENT summary with the PayNow note. Everything is read from the
  * draft; nothing is written to Supabase from this screen.
  */
 export function ReviewScreen() {
   const { draft, setDraft, goToStep } = useBookingDraft();
+  const [parkingOpen, setParkingOpen] = useState(false);
   const [busOpen, setBusOpen] = useState(false);
 
   const seats = partySeatCount(draft);
@@ -42,7 +42,7 @@ export function ReviewScreen() {
               </p>
               <button
                 type="button"
-                onClick={() => goToStep("table")}
+                onClick={() => goToStep("guests")}
                 className="text-[13px] text-[#c9a648] underline"
               >
                 Edit
@@ -70,10 +70,14 @@ export function ReviewScreen() {
             </div>
           </div>
 
-          <ParkingStepper
-            value={draft.cars}
-            max={seats}
-            onChange={(cars) => setDraft({ ...draft, cars })}
+          <OptionCard
+            label="Car parking"
+            value={
+              draft.cars > 0
+                ? `${draft.cars} ${draft.cars === 1 ? "pass" : "passes"}`
+                : null
+            }
+            onClick={() => setParkingOpen(true)}
           />
           <OptionCard
             label="Shuttle bus"
@@ -111,14 +115,7 @@ export function ReviewScreen() {
               S${total}
             </span>
           </div>
-          <div className="mt-[18px] flex gap-[10px] rounded-[10px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-[14px] py-3">
-            <Image
-              src="/book/icon-qr.svg"
-              alt=""
-              width={15}
-              height={15}
-              className="mt-[2px] shrink-0"
-            />
+          <div className="mt-[18px] rounded-[10px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-[14px] py-3">
             <p className="text-[13px] leading-[1.5] text-[#9a7f3e]">
               {payable === 0
                 ? "Nothing to pay — complimentary seats cover this booking."
@@ -128,6 +125,16 @@ export function ReviewScreen() {
         </div>
       </div>
 
+      <CountModal
+        open={parkingOpen}
+        onClose={() => setParkingOpen(false)}
+        titleId="parking-dialog-title"
+        title="Car parking"
+        description="Complimentary parking passes for on-site parking at Raffles City."
+        fieldLabel="Parking passes"
+        saved={draft.cars}
+        onSave={(cars) => setDraft({ ...draft, cars })}
+      />
       <BusModal open={busOpen} onClose={() => setBusOpen(false)} />
     </div>
   );
@@ -163,25 +170,3 @@ function OptionCard({
   );
 }
 
-/** Car parking quantity — capped at one pass per guest. */
-function ParkingStepper({
-  value,
-  max,
-  onChange,
-}: {
-  value: number;
-  max: number;
-  onChange: (next: number) => void;
-}) {
-  const cap = Math.max(max, 0);
-  const cars = Math.min(value, cap);
-  return (
-    <div className="flex w-full items-center justify-between gap-4 rounded-card border border-[#6e5a2b] bg-[#1a1610] px-5 py-4">
-      <div className="flex min-w-0 flex-col gap-[2px]">
-        <p className="text-[16px] font-medium text-gold">Car parking</p>
-        <p className="text-[13px] text-[#9a7f3e]">Up to {cap} — one per guest</p>
-      </div>
-      <Stepper value={cars} min={0} max={cap} onChange={onChange} />
-    </div>
-  );
-}

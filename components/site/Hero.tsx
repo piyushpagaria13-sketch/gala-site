@@ -14,7 +14,7 @@ export function Hero() {
       <div className="relative aspect-[1280/832] w-full max-w-[1280px]">
         <Image
           src="/hero/image-19.png"
-          alt="UWCSEA Dover Class of 2027 Graduation Gala Dinner — Saturday, 22 May 2027, 7:30 PM to 12:00 AM, world-class grand ballroom"
+          alt="UWCSEA Dover Class of 2027 Graduation Gala Dinner — Saturday, 22 May 2027, 7:30 PM, world-class grand ballroom"
           fill
           priority
           sizes="(max-width: 1280px) 100vw, 1280px"

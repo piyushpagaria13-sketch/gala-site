@@ -5,18 +5,12 @@ import { useId } from "react";
 import type { Guest } from "@/lib/types";
 
 /**
- * One attendee card on the "Who's coming?" grid — name, age, dietary
+ * One attendee card on the "Who's coming?" grid — name, 18+ toggle, dietary
  * option, and optional allergy note. The student card carries a GRADUATE
  * badge and a darker name field (prefilled from the first step).
  */
 
-export const DIETARY_OPTIONS = [
-  "Vegetarian",
-  "Chicken",
-  "Fish",
-  "Gluten-free",
-  "Vegan",
-];
+export const DIETARY_OPTIONS = ["Vegetarian", "Chicken", "Fish"];
 
 const FIELD =
   "w-full rounded-[10px] border border-[#6e5a2b] px-[14px] py-3 text-[15px] text-[#e8d9a8] outline-none transition-colors placeholder:text-[#77633a] focus:border-gold";
@@ -89,24 +83,39 @@ export function GuestCard({
         />
       </div>
 
-      <div className="mt-3 flex flex-col gap-[6px]">
-        <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-age`}>
-          Age
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <label
+          htmlFor={`${id}-age`}
+          className="text-[15px] leading-[1.4] text-[#e3c46a]"
+        >
+          Are you 18 years old or above
         </label>
-        <input
+        <button
           id={`${id}-age`}
-          type="text"
-          inputMode="numeric"
-          value={guest.age ?? ""}
-          placeholder="Optional"
-          onChange={(e) => onChange({ ...guest, age: e.target.value })}
-          className={`${FIELD} bg-[#1a1610]`}
-        />
+          type="button"
+          role="switch"
+          aria-checked={guest.age === "18+"}
+          onClick={() =>
+            onChange({
+              ...guest,
+              age: guest.age === "18+" ? "" : "18+",
+            })
+          }
+          className={`relative h-[31px] w-[51px] shrink-0 rounded-pill transition-colors duration-200 ${
+            guest.age === "18+" ? "bg-[#34c759]" : "bg-[#39322a]"
+          }`}
+        >
+          <span
+            className={`absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-pill bg-white shadow-[0_3px_8px_rgba(0,0,0,0.35)] transition-transform duration-200 ${
+              guest.age === "18+" ? "translate-x-[20px]" : "translate-x-0"
+            }`}
+          />
+        </button>
       </div>
 
       <div className="mt-3 flex flex-col gap-[6px]">
         <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-diet`}>
-          Dietary restriction
+          Dietary Preferences
         </label>
         <div className="relative">
           <select
@@ -138,7 +147,7 @@ export function GuestCard({
 
       <div className="mt-3 flex flex-col gap-[6px]">
         <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-allergy`}>
-          Allergies
+          Dietary restrictions
         </label>
         <input
           id={`${id}-allergy`}

@@ -7,6 +7,7 @@ import {
   partySeatCount,
   useBookingDraft,
 } from "@/lib/bookingDraft";
+import { syncSheetAfterChange } from "@/app/actions/syncSheet";
 import {
   BookingCapacityError,
   createBooking,
@@ -63,6 +64,10 @@ export function ContinueButton() {
       setBusy(true);
       setError(null);
       try {
+        // The students table holds only the complimentary-ticket list.
+        // An exact match means this booking gets the free tickets and the
+        // dialog explains it; any other name is a regular booking and
+        // continues with whatever was typed.
         const match = await matchStudent(draft.student?.name ?? "");
         if (match) {
           setDraft({ ...draft, student: match });
@@ -86,8 +91,8 @@ export function ContinueButton() {
       return;
     }
 
-    const studentId = draft.student?.id?.trim();
-    if (!studentId || draft.tableNo == null) return;
+    const studentId = draft.student?.id?.trim() || null;
+    if (draft.tableNo == null) return;
 
     setBusy(true);
     setError(null);
@@ -108,6 +113,9 @@ export function ContinueButton() {
         bookingId: created.id,
         amount: created.amount,
         bookingStatus: created.status,
+      });
+      void syncSheetAfterChange().catch((error) => {
+        console.error("Sheet sync failed", error);
       });
       if (created.amount === 0) {
         goToStep("done");

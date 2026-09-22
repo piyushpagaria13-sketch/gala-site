@@ -3,5 +3,5 @@
  */
 export const COMP_MODAL_COPY = {
   title: "Complimentary seats included",
-  body: "This student is a scholar, and you will receive a complimentary ticket.",
+  body: "This student's booking includes complimentary tickets, courtesy of the PA.",
 };
