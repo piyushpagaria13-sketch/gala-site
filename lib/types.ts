@@ -8,7 +8,7 @@ export type Student = {
   id: string;
   name: string;
   grade?: string;
-  // TODO: match columns on the students table
+  compSeats: number;
 };
 
 export type Guest = {
@@ -26,5 +26,9 @@ export type Booking = {
   partySize: number;
   student?: Student;
   guests?: Guest[];
-  // TODO: remaining booking columns (cars, busSeats, contact, created_at)
+  cars?: number;
+  busSeats?: number;
+  contact?: string;
+  email?: string;
+  amount?: number;
 };

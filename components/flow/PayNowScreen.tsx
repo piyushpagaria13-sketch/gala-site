@@ -1,43 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
-import { SEAT_PRICE } from "@/lib/pricing";
+import { bookingTotal } from "@/lib/pricing";
 
 /**
- * "Pay using PayNow" — shown after Confirm & pay. QR card with the amount and
- * the GALA reference callout, then a full-width "I've paid" button.
- *
- * TODO: the QR below is a placeholder pattern (as in the design). Swap in the
- * real PayNow QR once the payee UEN/HitPay integration is set up, and use the
- * ref returned by create_booking instead of the local placeholder.
+ * "Pay using PayNow" — shown after Confirm & pay when there is a payable
+ * total. QR card with the amount and the GALA reference, then "I've paid".
  */
 export function PayNowScreen() {
-  const { draft, setDraft, goNext } = useBookingDraft();
-
-  // Placeholder booking ref until create_booking returns the real GALA-NNNN.
-  const [ref] = useState(
-    () =>
-      draft.bookingRef ??
-      `GALA-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`,
-  );
-
-  // Persist the ref so the confirmation screen shows the same one.
-  useEffect(() => {
-    if (draft.bookingRef !== ref) {
-      setDraft({ ...draft, bookingRef: ref });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref]);
+  const { draft, goNext } = useBookingDraft();
 
   const seats = partySeatCount(draft);
-  const total = seats * SEAT_PRICE;
-
-  const handlePaid = () => {
-    // TODO: POST /api/booking (create_booking RPC) with status claims_paid;
-    // the confirmation screen then polls until the Grade Rep marks it paid.
-    goNext();
-  };
+  const comps = draft.student?.compSeats ?? 0;
+  const total = draft.amount ?? bookingTotal(seats, comps);
+  const ref = draft.bookingRef ?? "GALA27";
 
   return (
     <div className="flex w-full flex-col items-center px-4 pb-8 pt-5">
@@ -78,7 +54,7 @@ export function PayNowScreen() {
 
       <button
         type="button"
-        onClick={handlePaid}
+        onClick={() => goNext()}
         className="mt-[18px] w-full max-w-[480px] rounded-pill bg-gold py-[15px] text-[16px] font-semibold text-[#241a06]"
       >
         I&apos;ve paid
@@ -96,7 +72,6 @@ function PlaceholderQr() {
   let seed = 7;
   for (let row = 0; row < 25; row++) {
     for (let col = 0; col < 25; col++) {
-      // Keep the center clear for the PAY NOW label.
       if (row >= 9 && row <= 15 && col >= 8 && col <= 16) continue;
       seed = (seed * 1103515245 + 12345) % 2147483648;
       if (seed / 2147483648 < 0.42) {

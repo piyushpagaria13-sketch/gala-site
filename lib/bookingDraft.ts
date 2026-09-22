@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Guest, Student } from "./types";
+import type { Guest, Student, BookingStatus } from "./types";
 import { TABLE_CAPACITY } from "./floorplan";
 
 export type BookingKind = "seats" | "table";
@@ -29,9 +29,11 @@ export type BookingDraft = {
   contact: BookingContact | null;
   /**
    * Booking reference (GALA-NNNN) shown on the pay + confirmation screens.
-   * TODO: replace the local placeholder with the ref returned by create_booking.
    */
   bookingRef: string | null;
+  bookingId: string | null;
+  amount: number | null;
+  bookingStatus: BookingStatus | null;
 };
 
 const EMPTY_DRAFT: BookingDraft = {
@@ -44,6 +46,9 @@ const EMPTY_DRAFT: BookingDraft = {
   busSeats: 0,
   contact: null,
   bookingRef: null,
+  bookingId: null,
+  amount: null,
+  bookingStatus: null,
 };
 
 export type BookingStep =
@@ -81,6 +86,13 @@ type BookingDraftContextValue = {
   /** "How many seats?" dialog (seats path only). */
   seatCountOpen: boolean;
   setSeatCountOpen: (open: boolean) => void;
+  /** Student ids that already saw the complimentary-seats modal this session. */
+  compModalSeenIds: string[];
+  markCompModalSeen: (studentId: string) => void;
+  compModalOpen: boolean;
+  /** Open the complimentary-seats dialog. If advance, Continue on the dialog goes to the next step. */
+  openCompModal: (advance: boolean) => void;
+  closeCompModal: () => void;
 };
 
 const BookingDraftContext = createContext<BookingDraftContextValue | null>(
@@ -130,6 +142,9 @@ export function BookingDraftProvider({ children }: { children: ReactNode }) {
   const [stepValid, setStepValid] = useState(false);
   const [step, setStep] = useState<BookingStep>("student");
   const [seatCountOpen, setSeatCountOpen] = useState(false);
+  const [compModalSeenIds, setCompModalSeenIds] = useState<string[]>([]);
+  const [compModalOpen, setCompModalOpen] = useState(false);
+  const [compModalAdvance, setCompModalAdvance] = useState(false);
 
   const value = useMemo<BookingDraftContextValue>(
     () => ({
@@ -145,6 +160,9 @@ export function BookingDraftProvider({ children }: { children: ReactNode }) {
         setStepValid(false);
         setStep("student");
         setSeatCountOpen(false);
+        setCompModalSeenIds([]);
+        setCompModalOpen(false);
+        setCompModalAdvance(false);
       },
       stepValid,
       setStepValid,
@@ -175,8 +193,38 @@ export function BookingDraftProvider({ children }: { children: ReactNode }) {
       },
       seatCountOpen,
       setSeatCountOpen,
+      compModalSeenIds,
+      markCompModalSeen: (studentId) => {
+        setCompModalSeenIds((ids) =>
+          ids.includes(studentId) ? ids : [...ids, studentId],
+        );
+      },
+      compModalOpen,
+      openCompModal: (advance) => {
+        setCompModalAdvance(advance);
+        setCompModalOpen(true);
+      },
+      closeCompModal: () => {
+        setCompModalOpen(false);
+        if (compModalAdvance) {
+          setCompModalAdvance(false);
+          const next = STEP_ORDER[STEP_ORDER.indexOf(step) + 1];
+          if (next) {
+            setStep(next);
+            setStepValid(isStepComplete(next, draft));
+          }
+        }
+      },
     }),
-    [draft, stepValid, step, seatCountOpen],
+    [
+      draft,
+      stepValid,
+      step,
+      seatCountOpen,
+      compModalSeenIds,
+      compModalOpen,
+      compModalAdvance,
+    ],
   );
 
   // TODO: hydrate draft from localStorage on mount.

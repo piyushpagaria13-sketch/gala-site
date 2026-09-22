@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ContinueButton } from "@/components/flow/ContinueButton";
+import { CompSeatsHost } from "@/components/flow/CompSeatsHost";
 import { ExitButton } from "@/components/flow/ExitModal";
 import { FlowBreadcrumb } from "@/components/flow/FlowBreadcrumb";
 import { BookingDraftProvider } from "@/lib/bookingDraft";
@@ -42,6 +43,7 @@ export default function BookLayout({
             UWCSEA Dover · Graduation Gala Dinner
           </footer>
         </div>
+        <CompSeatsHost />
       </div>
     </BookingDraftProvider>
   );

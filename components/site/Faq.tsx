@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { DIETARY_OPTIONS } from "@/components/flow/GuestCard";
 
 /**
  * FAQ section — Figma frames "FAQ / all closed" (262:303) and
@@ -21,12 +20,12 @@ const FAQ_ITEMS = [
   {
     question: "Who organises the Gala?",
     answer:
-      "The Graduation Gala Dinner is organised by the UWCSEA Dover Parents' Association (PA), together with the Class of 2027 Grade Reps.",
+      "The class of 2027 Grade Reps and the graduation committee in association with the PA.",
   },
   {
     question: "How much are tickets?",
     answer:
-      "S$218 per seat, or S$2,180 for a full table of 10. There is no booking fee. The price covers the sit-down dinner, champagne toast (non-alcoholic options included), photo booths and the DJ.",
+      "$218 per seat or $2180 for the table. There is no booking fee. The price covers foremost the ballroom, free flow of soft drinks, coffee, tea, complementary bus shuttle, free corkage for duty paid bottles.",
   },
   {
     question: "Who do I book under?",
@@ -55,14 +54,13 @@ const FAQ_ITEMS = [
   },
   {
     question: "What about dietary requirements?",
-    answer: `You'll choose a dietary option for each guest while booking — ${
-      DIETARY_OPTIONS.slice(0, -1).join(", ")
-    } or ${DIETARY_OPTIONS[DIETARY_OPTIONS.length - 1]} — and can note any allergies so the kitchen can plan for them.`,
+    answer:
+      "We are catering for chicken, fish, vegetarian and also for food restrictions gluten-free, vegan.",
   },
   {
     question: "Is there parking or a shuttle?",
     answer:
-      "Raffles City has on-site parking, and you can request complimentary parking passes or shuttle bus seats while reviewing your booking.",
+      "Raffles City has on-site parking. You can request complimentary parking passes or shuttle bus seats while booking your tickets.",
   },
   {
     question: "What's the dress code, and can I get a refund?",

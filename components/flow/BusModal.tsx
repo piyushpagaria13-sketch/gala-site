@@ -57,7 +57,7 @@ export function BusModal({
           <Stepper value={seats} min={1} max={maxSeats} onChange={setSeats} />
         </div>
         <p className="mt-2 text-[12px] text-[#77633a]">
-          Up to {maxSeats} — one per guest in your booking.
+          Up to {maxSeats} — one per guest
         </p>
 
         <div className="mt-[26px] flex justify-end gap-3">

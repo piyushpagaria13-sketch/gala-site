@@ -1,30 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBookingDraft } from "@/lib/bookingDraft";
+import { searchStudents, sameStudentName } from "@/lib/students";
+import type { Student } from "@/lib/types";
+
+const COMP_NOTE =
+  "This booking includes 2 complimentary seats — the graduate's and one guest's, courtesy of the PA.";
+
+function namesMatch(a: string, b: string) {
+  return sameStudentName(a, b);
+}
 
 /**
- * Step 1 — student name. Figma frame "D1a · Student name — empty (dark)"
- * (252:15).
- * TODO: search the students table and select-to-validate (matched state);
- * fallback to free text + grade dropdown if the students table is empty.
+ * Step 1 — student name. Continue is enabled as soon as anything is typed.
+ * After typing pauses, the name is checked against the students table.
  */
 export function StudentSearch() {
-  const { draft, setDraft, setStepValid } = useBookingDraft();
+  const {
+    draft,
+    setDraft,
+    setStepValid,
+    compModalSeenIds,
+    markCompModalSeen,
+    openCompModal,
+  } = useBookingDraft();
   const [name, setName] = useState(draft.student?.name ?? "");
   const [isAdult, setIsAdult] = useState(false);
+  const [matches, setMatches] = useState<Student[]>([]);
+  const [open, setOpen] = useState(false);
+  const requestId = useRef(0);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+
+  const selected = draft.student;
+
+  useEffect(() => {
+    setStepValid(Boolean(name.trim()));
+  }, [name, setStepValid]);
+
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setMatches([]);
+      setOpen(false);
+      return;
+    }
+    if (selected?.id && namesMatch(selected.name, trimmed)) {
+      setMatches([]);
+      setOpen(false);
+      return;
+    }
+
+    const id = ++requestId.current;
+    const timer = setTimeout(() => {
+      searchStudents(trimmed)
+        .then((rows) => {
+          if (requestId.current !== id) return;
+          const exact = rows.find((row) => namesMatch(row.name, trimmed));
+          if (exact) {
+            setDraft({ ...draftRef.current, student: exact });
+            setMatches([]);
+            setOpen(false);
+            if (
+              exact.compSeats > 0 &&
+              !compModalSeenIds.includes(exact.id)
+            ) {
+              markCompModalSeen(exact.id);
+              openCompModal(false);
+            }
+            return;
+          }
+          setMatches(rows);
+          setOpen(rows.length > 0);
+        })
+        .catch(() => {
+          if (requestId.current !== id) return;
+          setMatches([]);
+          setOpen(false);
+        });
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [name, selected, setDraft, compModalSeenIds, markCompModalSeen, openCompModal]);
 
   const handleNameChange = (value: string) => {
     setName(value);
     const trimmed = value.trim();
-    // TODO: require a validated match from the students table instead of
-    // any non-empty name once search is wired up.
+    setStepValid(trimmed.length > 0);
+    const keepMatch =
+      selected?.id && trimmed && namesMatch(selected.name, trimmed);
     setDraft({
       ...draft,
-      student: trimmed ? { id: "", name: trimmed } : null,
+      student: trimmed
+        ? keepMatch
+          ? { ...selected, name: trimmed }
+          : { id: "", name: trimmed, compSeats: 0 }
+        : null,
     });
-    setStepValid(trimmed.length > 0);
   };
+
+  const handleSelect = (student: Student) => {
+    setName(student.name);
+    setDraft({ ...draft, student });
+    setMatches([]);
+    setOpen(false);
+    setStepValid(true);
+    if (student.compSeats > 0 && !compModalSeenIds.includes(student.id)) {
+      markCompModalSeen(student.id);
+      openCompModal(false);
+    }
+  };
+
+  const showCompNote = (selected?.compSeats ?? 0) > 0;
 
   return (
     <div className="flex w-full max-w-[440px] flex-col items-center px-4 pt-[120px]">
@@ -35,7 +123,7 @@ export function StudentSearch() {
         Whose graduation are you celebrating?
       </h1>
 
-      <div className="mt-11 flex w-full flex-col gap-2">
+      <div className="relative mt-11 flex w-full flex-col gap-2">
         <label htmlFor="student-name" className="text-[13px] text-[#9a7f3e]">
           Student name
         </label>
@@ -48,9 +136,34 @@ export function StudentSearch() {
           autoComplete="off"
           className="w-full rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] focus:border-gold"
         />
+        {open && (
+          <ul
+            className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-auto rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] py-1 shadow-xl"
+            role="listbox"
+          >
+            {matches.map((student) => (
+              <li key={student.id}>
+                <button
+                  type="button"
+                  role="option"
+                  className="w-full px-[18px] py-3 text-left text-[16px] text-[#e3c46a] hover:bg-[#241a06]"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSelect(student)}
+                >
+                  {student.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <p className="text-[13px] leading-[1.5] text-[#77633a]">
           Bookings are made under the graduating student&apos;s name.
         </p>
+        {showCompNote && (
+          <p className="rounded-[10px] border border-gold/40 bg-[#241a06] px-3 py-2.5 text-[13px] leading-[1.5] text-gold">
+            {COMP_NOTE}
+          </p>
+        )}
       </div>
 
       <div className="mt-6 flex w-full items-center justify-between gap-4 rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4">
@@ -60,7 +173,6 @@ export function StudentSearch() {
         >
           Will the student be 18 years old by May 22, 2027?
         </label>
-        {/* TODO: store in booking draft alongside the selected student */}
         <button
           id="student-adult"
           type="button"

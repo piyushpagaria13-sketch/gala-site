@@ -5,9 +5,9 @@ import { useId } from "react";
 import type { Guest } from "@/lib/types";
 
 /**
- * One attendee card on the "Who's coming?" grid — Name and a Dietary
- * restriction select. The student card carries a GRADUATE badge and a darker
- * name field (prefilled from the first step).
+ * One attendee card on the "Who's coming?" grid — name, age, dietary
+ * option, and optional allergy note. The student card carries a GRADUATE
+ * badge and a darker name field (prefilled from the first step).
  */
 
 export const DIETARY_OPTIONS = [
@@ -90,6 +90,21 @@ export function GuestCard({
       </div>
 
       <div className="mt-3 flex flex-col gap-[6px]">
+        <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-age`}>
+          Age
+        </label>
+        <input
+          id={`${id}-age`}
+          type="text"
+          inputMode="numeric"
+          value={guest.age ?? ""}
+          placeholder="Optional"
+          onChange={(e) => onChange({ ...guest, age: e.target.value })}
+          className={`${FIELD} bg-[#1a1610]`}
+        />
+      </div>
+
+      <div className="mt-3 flex flex-col gap-[6px]">
         <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-diet`}>
           Dietary restriction
         </label>
@@ -119,6 +134,22 @@ export function GuestCard({
             className="pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2"
           />
         </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-[6px]">
+        <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-allergy`}>
+          Allergies
+        </label>
+        <input
+          id={`${id}-allergy`}
+          type="text"
+          value={guest.allergyNote ?? ""}
+          placeholder="Optional"
+          onChange={(e) =>
+            onChange({ ...guest, allergyNote: e.target.value })
+          }
+          className={`${FIELD} bg-[#1a1610]`}
+        />
       </div>
     </div>
   );

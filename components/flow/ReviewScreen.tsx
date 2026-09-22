@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useState } from "react";
 import { BusModal } from "@/components/flow/BusModal";
+import { Stepper } from "@/components/ui/Stepper";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
-import { SEAT_PRICE } from "@/lib/pricing";
+import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
 
 /**
  * "Almost there" — review before Confirm & pay. Left: YOUR SEATS card with
@@ -18,7 +19,9 @@ export function ReviewScreen() {
 
   const seats = partySeatCount(draft);
   const student = draft.student?.name ?? "";
-  const total = seats * SEAT_PRICE;
+  const comps = draft.student?.compSeats ?? 0;
+  const payable = payableSeats(seats, comps);
+  const total = bookingTotal(seats, comps);
 
   return (
     <div className="flex w-full flex-col items-center px-4 pb-8 pt-[30px]">
@@ -67,11 +70,10 @@ export function ReviewScreen() {
             </div>
           </div>
 
-          <ParkingToggle
-            on={draft.cars > 0}
-            onToggle={() =>
-              setDraft({ ...draft, cars: draft.cars > 0 ? 0 : 1 })
-            }
+          <ParkingStepper
+            value={draft.cars}
+            max={seats}
+            onChange={(cars) => setDraft({ ...draft, cars })}
           />
           <OptionCard
             label="Shuttle bus"
@@ -93,8 +95,13 @@ export function ReviewScreen() {
             <span className="text-[#9a7f3e]">
               {seats} {seats === 1 ? "seat" : "seats"} × S${SEAT_PRICE}
             </span>
-            <span className="text-[#d9bd6f]">S${total}</span>
+            <span className="text-[#d9bd6f]">S${seats * SEAT_PRICE}</span>
           </div>
+          {comps > 0 && (
+            <div className="mt-2 text-[14px] text-[#9a7f3e]">
+              − {comps} complimentary seats · S$0
+            </div>
+          )}
           <div className="mt-[14px] h-px w-full bg-[#3a2f18]" />
           <div className="mt-[14px] flex items-baseline justify-between">
             <span className="text-[15px] font-medium text-[#e8d9a8]">
@@ -113,8 +120,9 @@ export function ReviewScreen() {
               className="mt-[2px] shrink-0"
             />
             <p className="text-[13px] leading-[1.5] text-[#9a7f3e]">
-              Pay via PayNow, QR on the next step. Your seats are held while
-              the confirmation of payment is cross-checked.
+              {payable === 0
+                ? "Nothing to pay — complimentary seats cover this booking."
+                : "Pay via PayNow, QR on the next step. Your seats are held while the confirmation of payment is cross-checked."}
             </p>
           </div>
         </div>
@@ -155,36 +163,25 @@ function OptionCard({
   );
 }
 
-/** Car parking yes/no — same switch as the student-age toggle. */
-function ParkingToggle({
-  on,
-  onToggle,
+/** Car parking quantity — capped at one pass per guest. */
+function ParkingStepper({
+  value,
+  max,
+  onChange,
 }: {
-  on: boolean;
-  onToggle: () => void;
+  value: number;
+  max: number;
+  onChange: (next: number) => void;
 }) {
+  const cap = Math.max(max, 0);
+  const cars = Math.min(value, cap);
   return (
     <div className="flex w-full items-center justify-between gap-4 rounded-card border border-[#6e5a2b] bg-[#1a1610] px-5 py-4">
       <div className="flex min-w-0 flex-col gap-[2px]">
         <p className="text-[16px] font-medium text-gold">Car parking</p>
-        <p className="text-[13px] text-[#9a7f3e]">{on ? "Yes" : "No"}</p>
+        <p className="text-[13px] text-[#9a7f3e]">Up to {cap} — one per guest</p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label="Car parking"
-        onClick={onToggle}
-        className={`relative h-[31px] w-[51px] shrink-0 rounded-pill transition-colors duration-200 ${
-          on ? "bg-[#34c759]" : "bg-[#39322a]"
-        }`}
-      >
-        <span
-          className={`absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-pill bg-white shadow-[0_3px_8px_rgba(0,0,0,0.35)] transition-transform duration-200 ${
-            on ? "translate-x-[20px]" : "translate-x-0"
-          }`}
-        />
-      </button>
+      <Stepper value={cars} min={0} max={cap} onChange={onChange} />
     </div>
   );
 }

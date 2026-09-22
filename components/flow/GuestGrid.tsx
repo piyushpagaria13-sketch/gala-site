@@ -51,11 +51,14 @@ export function GuestGrid() {
   }, [guests, setStepValid]);
 
   const commit = (next: Guest[]) => {
-    setDraft({
-      ...draft,
-      guests: next,
-      partySize: draft.type === "table" ? TABLE_CAPACITY : next.length,
-    });
+  const size = draft.type === "table" ? TABLE_CAPACITY : next.length;
+  setDraft({
+    ...draft,
+    guests: next,
+    partySize: size,
+    cars: Math.min(draft.cars, size),
+    busSeats: Math.min(draft.busSeats, size),
+  });
   };
 
   const update = (index: number, nextGuest: Guest) => {
