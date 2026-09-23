@@ -64,10 +64,8 @@ export function ContinueButton() {
       setBusy(true);
       setError(null);
       try {
-        // The students table holds only the complimentary-ticket list.
-        // An exact match means this booking gets the free tickets and the
-        // dialog explains it; any other name is a regular booking and
-        // continues with whatever was typed.
+        // An exact match with complimentary seats opens the dialog.
+        // Class names and any other typed name continue as a regular booking.
         const match = await matchStudent(draft.student?.name ?? "");
         if (match) {
           setDraft({ ...draft, student: match });

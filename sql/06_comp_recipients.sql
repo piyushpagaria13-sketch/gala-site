@@ -2,8 +2,8 @@
 -- Requires 05_student_names.sql. Re-runnable: upserts on
 -- (official_name, family_name), so edits here overwrite earlier runs.
 --
--- Also keeps the 10 fake test students, resetting their comp_seats so only
--- Aryan Tan, Aryan Mehta and Mei Ling Wong stay at 2.
+-- Sample rows (no family_name) stay in the table for older tests but
+-- never receive complimentary tickets.
 
 create unique index if not exists students_official_family_key
   on students (official_name, family_name);
@@ -40,10 +40,7 @@ on conflict (official_name, family_name) do update set
   comp_seats = excluded.comp_seats,
   preferred_name = excluded.preferred_name;
 
--- Fake test rows are the ones without a family_name.
+-- Sample rows are the ones without a family_name.
 update students
-set comp_seats = case
-  when name in ('Aryan Tan', 'Aryan Mehta', 'Mei Ling Wong') then 2
-  else 0
-end
+set comp_seats = 0
 where family_name is null;

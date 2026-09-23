@@ -1,11 +1,17 @@
 import { getSupabaseClient } from "./supabase";
 import type { Student } from "@/lib/types";
+import { studentMatchesExact } from "./studentMatch";
 
-/** Local roster so name matching works even before the SQL seed is applied. */
+export { sameStudentName, studentMatchesExact } from "./studentMatch";
+
+/**
+ * Offline fallback only. Complimentary tickets come from the live roster
+ * (the 25 reserved recipients). These sample names never receive them.
+ */
 export const SEED_STUDENTS: Student[] = [
-  { id: "local:aryan-tan", name: "Aryan Tan", grade: "12", compSeats: 2 },
-  { id: "local:aryan-mehta", name: "Aryan Mehta", grade: "12", compSeats: 2 },
-  { id: "local:mei-ling-wong", name: "Mei Ling Wong", grade: "12", compSeats: 2 },
+  { id: "local:aryan-tan", name: "Aryan Tan", grade: "12", compSeats: 0 },
+  { id: "local:aryan-mehta", name: "Aryan Mehta", grade: "12", compSeats: 0 },
+  { id: "local:mei-ling-wong", name: "Mei Ling Wong", grade: "12", compSeats: 0 },
   { id: "local:zara-binte-rahman", name: "Zara Binte Rahman", grade: "12", compSeats: 0 },
   { id: "local:joshua-lim", name: "Joshua Lim", grade: "12", compSeats: 0 },
   { id: "local:priya-krishnan", name: "Priya Krishnan", grade: "12", compSeats: 0 },
@@ -29,8 +35,11 @@ function normalize(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-export function sameStudentName(a: string, b: string) {
-  return normalize(a) === normalize(b);
+function searchTokens(term: string): string[] {
+  return term
+    .split(/\s+/)
+    .map((token) => token.replace(/[,()%]/g, ""))
+    .filter((token) => token.length >= 2);
 }
 
 /** Display convention: preferred_name + " " + family_name. */
@@ -48,8 +57,11 @@ export function studentDisplayName(student: {
 function fromSeed(query: string): Student[] {
   const q = normalize(query);
   if (!q) return [];
-  return SEED_STUDENTS.filter((student) =>
-    student.name.toLowerCase().includes(q),
+  return SEED_STUDENTS.filter(
+    (student) =>
+      studentMatchesExact(student, query) ||
+      student.name.toLowerCase().includes(q) ||
+      searchTokens(q).some((token) => student.name.toLowerCase().includes(token)),
   );
 }
 
@@ -83,22 +95,25 @@ export async function searchStudents(query: string): Promise<Student[]> {
 
   // PostgREST or() syntax breaks on these characters; names never need them.
   const term = trimmed.replace(/[,()%]/g, "");
-  if (!term) return seedHits;
+  const tokens = searchTokens(term);
+  if (!term || tokens.length === 0) return seedHits;
 
   try {
     const supabase = getSupabaseClient();
+    const columns = [
+      "preferred_name",
+      "official_name",
+      "family_name",
+      "name",
+    ] as const;
+    const clauses = tokens.flatMap((token) =>
+      columns.map((column) => `${column}.ilike.%${token}%`),
+    );
     const { data, error } = await supabase
       .from("students")
       .select("id, name, grade, comp_seats, preferred_name, official_name, family_name")
-      .or(
-        [
-          `preferred_name.ilike.%${term}%`,
-          `official_name.ilike.%${term}%`,
-          `family_name.ilike.%${term}%`,
-          `name.ilike.%${term}%`,
-        ].join(","),
-      )
-      .limit(8);
+      .or(clauses.join(","))
+      .limit(200);
     if (error || !data?.length) return seedHits;
 
     const students = new Map<string, Student>();
@@ -109,22 +124,6 @@ export async function searchStudents(query: string): Promise<Student[]> {
   } catch {
     return seedHits;
   }
-}
-
-/**
- * Exact (case/whitespace-insensitive) match on the given and family
- * names, without requiring the family name: preferred name, official
- * name, or either followed by the family name all count.
- */
-export function studentMatchesExact(student: Student, query: string): boolean {
-  const forms = [
-    student.name,
-    student.preferredName,
-    student.officialName,
-    student.officialName && `${student.officialName} ${student.familyName ?? ""}`,
-    student.preferredName && `${student.preferredName} ${student.familyName ?? ""}`,
-  ];
-  return forms.some((form) => form && sameStudentName(form, query));
 }
 
 /**
