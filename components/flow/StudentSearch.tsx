@@ -1,34 +1,88 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBookingDraft } from "@/lib/bookingDraft";
+import { sameStudentName, searchStudents } from "@/lib/students";
+import type { Student } from "@/lib/types";
 
 /**
- * Step 1 — student name. A plain text field: no suggestions. Continue is
- * enabled as soon as anything is typed, and validation happens on Continue
- * (see ContinueButton): an exact match against the complimentary-ticket
- * list — preferred or official name, family name optional — gets the free
- * tickets and the explanation dialog; any other name books normally.
+ * Step 1 — student name. Suggestions come from the class list as you type.
+ * Continue stays on once name and phone are filled. An exact match is
+ * resolved on Continue.
  */
 export function StudentSearch() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const [name, setName] = useState(draft.student?.name ?? "");
   const [phone, setPhone] = useState(draft.contact?.phone ?? "");
+  const [matches, setMatches] = useState<Student[]>([]);
+  const [open, setOpen] = useState(false);
+  const requestId = useRef(0);
 
   useEffect(() => {
     setStepValid(Boolean(name.trim() && phone.trim()));
   }, [name, phone, setStepValid]);
 
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setMatches([]);
+      setOpen(false);
+      return;
+    }
+    if (draft.student?.id && sameStudentName(draft.student.name, trimmed)) {
+      setMatches([]);
+      setOpen(false);
+      return;
+    }
+
+    const id = ++requestId.current;
+    const timer = setTimeout(() => {
+      searchStudents(trimmed)
+        .then((rows) => {
+          if (requestId.current !== id) return;
+          const q = trimmed.toLowerCase();
+          const ranked = rows
+            .slice()
+            .sort((a, b) => rankName(a, q) - rankName(b, q))
+            .slice(0, 8);
+          setMatches(ranked);
+          setOpen(ranked.length > 0);
+        })
+        .catch(() => {
+          if (requestId.current !== id) return;
+          setMatches([]);
+          setOpen(false);
+        });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [name, draft.student]);
+
   const handleNameChange = (value: string) => {
     setName(value);
     const trimmed = value.trim();
+    const keep =
+      draft.student?.id && trimmed && sameStudentName(draft.student.name, trimmed);
     setDraft({
       ...draft,
       student: trimmed
-        ? { ...(draft.student ?? { id: "", compSeats: 0 }), name: trimmed }
+        ? keep
+          ? { ...draft.student!, name: trimmed }
+          : { id: "", name: trimmed, compSeats: 0 }
         : null,
       contact: { ...draft.contact, phone },
     });
+  };
+
+  const handleSelect = (student: Student) => {
+    setName(student.name);
+    setDraft({
+      ...draft,
+      student,
+      contact: { ...draft.contact, phone },
+    });
+    setMatches([]);
+    setOpen(false);
   };
 
   const handlePhoneChange = (value: string) => {
@@ -58,12 +112,49 @@ export function StudentSearch() {
         <input
           id="student-name"
           type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="student-suggestions"
+          aria-autocomplete="list"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
+          onBlur={() => setOpen(false)}
           placeholder="Start typing a name"
           autoComplete="off"
           className="w-full rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] focus:border-gold"
         />
+        {open && (
+          <ul
+            id="student-suggestions"
+            role="listbox"
+            className="absolute left-0 right-0 top-[78px] z-20 max-h-56 overflow-auto rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] py-1 shadow-xl"
+          >
+            {matches.map((student) => {
+              const official =
+                student.officialName &&
+                student.preferredName &&
+                !sameStudentName(student.officialName, student.preferredName)
+                  ? student.officialName
+                  : "";
+              return (
+                <li key={student.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    className="flex w-full flex-col px-[18px] py-3 text-left hover:bg-[#241a06]"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handleSelect(student)}
+                  >
+                    <span className="text-[16px] text-[#e3c46a]">{student.name}</span>
+                    {official && (
+                      <span className="text-[12px] text-[#9a7f3e]">Official: {official}</span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <div className="relative mt-5 flex w-full flex-col gap-2">
@@ -86,4 +177,12 @@ export function StudentSearch() {
       </div>
     </div>
   );
+}
+
+function rankName(student: Student, query: string): number {
+  const preferred = (student.preferredName ?? student.name).toLowerCase();
+  const display = student.name.toLowerCase();
+  if (preferred.startsWith(query) || display.startsWith(query)) return 0;
+  if (preferred.includes(query) || display.includes(query)) return 1;
+  return 2;
 }

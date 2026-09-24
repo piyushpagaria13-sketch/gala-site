@@ -39,7 +39,7 @@ function searchTokens(term: string): string[] {
   return term
     .split(/\s+/)
     .map((token) => token.replace(/[,()%]/g, ""))
-    .filter((token) => token.length >= 2);
+    .filter((token) => token.length >= 1);
 }
 
 /** Display convention: preferred_name + " " + family_name. */
