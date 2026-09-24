@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useId } from "react";
+import { useId, useMemo, useState } from "react";
 import type { Guest } from "@/lib/types";
 
 /**
@@ -22,6 +22,8 @@ type GuestCardProps = {
   badge?: string;
   guest: Guest;
   onChange: (next: Guest) => void;
+  /** Class-list names. When set, the name field opens this dropdown. */
+  nameOptions?: string[];
   /** Remove this card. Omitted on the student card — the graduate can't be deleted. */
   onDelete?: () => void;
 };
@@ -32,8 +34,17 @@ export function GuestCard({
   guest,
   onChange,
   onDelete,
+  nameOptions,
 }: GuestCardProps) {
   const id = useId();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState<string | null>(null);
+  const options = useMemo(() => {
+    if (!nameOptions) return [];
+    const q = (query ?? "").trim().toLowerCase();
+    if (!q) return nameOptions;
+    return nameOptions.filter((name) => name.toLowerCase().includes(q));
+  }, [nameOptions, query]);
 
   return (
     <div className="rounded-card border border-[#6e5a2b] bg-[#1a1610] px-5 pb-[22px] pt-5">
@@ -73,14 +84,64 @@ export function GuestCard({
         <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-name`}>
           Name
         </label>
-        <input
-          id={`${id}-name`}
-          type="text"
-          value={guest.name}
-          placeholder="Full name"
-          onChange={(e) => onChange({ ...guest, name: e.target.value })}
-          className={`${FIELD} ${badge ? "bg-[#131008]" : "bg-[#1a1610]"}`}
-        />
+        {nameOptions ? (
+          <div className="relative">
+            <input
+              id={`${id}-name`}
+              type="text"
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={`${id}-names`}
+              aria-autocomplete="list"
+              value={guest.name}
+              placeholder="Choose a student"
+              onChange={(e) => {
+                onChange({ ...guest, name: e.target.value });
+                setQuery(e.target.value);
+                setOpen(true);
+              }}
+              onFocus={() => {
+                setQuery(null);
+                setOpen(true);
+              }}
+              onBlur={() => setOpen(false)}
+              className={`${FIELD} bg-[#131008]`}
+            />
+            {open && options.length > 0 && (
+              <ul
+                id={`${id}-names`}
+                role="listbox"
+                className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-auto rounded-[10px] border border-[#6e5a2b] bg-[#1a1610] py-1 shadow-xl"
+              >
+                {options.map((name) => (
+                  <li key={name}>
+                    <button
+                      type="button"
+                      role="option"
+                      className="w-full px-[14px] py-2 text-left text-[15px] text-[#e8d9a8] hover:bg-[#241a06]"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        onChange({ ...guest, name });
+                        setOpen(false);
+                      }}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
+          <input
+            id={`${id}-name`}
+            type="text"
+            value={guest.name}
+            placeholder="Full name"
+            onChange={(e) => onChange({ ...guest, name: e.target.value })}
+            className={`${FIELD} bg-[#1a1610]`}
+          />
+        )}
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-4">

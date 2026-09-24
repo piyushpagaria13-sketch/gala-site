@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AddGuestCard } from "@/components/flow/AddGuestCard";
 import { GuestCard } from "@/components/flow/GuestCard";
 import { isGuestComplete, useBookingDraft } from "@/lib/bookingDraft";
+import { CLASS_NAMES } from "@/lib/classList";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
 import type { Guest } from "@/lib/types";
 
@@ -13,53 +14,46 @@ function isStudent(guest: Guest, index: number): boolean {
   return index === 0;
 }
 
+function isBlank(guest: Guest): boolean {
+  return !guest.name.trim() && !guest.dietary && !guest.allergyNote;
+}
+
+function startingCards(studentName: string): Guest[] {
+  return [
+    { name: studentName, kind: "student" },
+    { name: "", kind: "guest" },
+  ];
+}
+
 /**
- * "Who's coming?" — guest details after a table or seats are reserved.
- * Seat 1 is always the graduate. A full table starts as 10 people: two
- * graduates, then guests. The second graduate can be removed; that opens
- * "Add student" and "Add guest" until the table is full again. Seat bookings
- * keep a single "Add another guest" card.
+ * "Who's coming?" starts with one student card and one guest card.
+ * Add student and Add guest sit underneath. Extra blank cards from an
+ * older full-table or seat-count seed are dropped.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const isTable = draft.type === "table";
+  const start = startingCards(draft.student?.name ?? "");
+  const guests: Guest[] = draft.guests.length > 0 ? draft.guests : start;
 
-  const guests: Guest[] =
-    draft.guests.length > 0
-      ? draft.guests
-      : isTable
-        ? [
-            { name: draft.student?.name ?? "", kind: "student" },
-            { name: "", kind: "student" },
-            ...Array.from(
-              { length: TABLE_CAPACITY - 2 },
-              (): Guest => ({ name: "", kind: "guest" }),
-            ),
-          ]
-        : [
-            { name: draft.student?.name ?? "", kind: "student" },
-            ...Array.from(
-              { length: Math.max(0, (draft.partySize ?? 1) - 1) },
-              (): Guest => ({ name: "", kind: "guest" }),
-            ),
-          ];
-
-  // Persist the initial seed so later adds/removes have a real guest list.
+  // Seed two cards once. Also drop a leftover wall of blank cards from the
+  // old full-table seed. This must not run again when Add student adds a card.
   useEffect(() => {
-    if (draft.guests.length > 0) return;
+    const padded =
+      draft.guests.length > 2 && draft.guests.slice(1).every(isBlank);
+    if (draft.guests.length > 0 && !padded) return;
     setDraft({
       ...draft,
-      guests,
-      partySize: isTable ? TABLE_CAPACITY : guests.length,
+      guests: start,
+      partySize: isTable ? TABLE_CAPACITY : start.length,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const filled = guests.length > 0 && guests.every(isGuestComplete);
-    const tableFull = !isTable || guests.length === TABLE_CAPACITY;
-    setStepValid(filled && tableFull);
-  }, [guests, isTable, setStepValid]);
+    setStepValid(filled);
+  }, [guests, setStepValid]);
 
   const commit = (next: Guest[]) => {
     const size = isTable ? TABLE_CAPACITY : next.length;
@@ -131,6 +125,7 @@ export function GuestGrid() {
               title={title}
               badge={student ? "GRADUATE" : undefined}
               guest={guest}
+              nameOptions={student ? CLASS_NAMES : undefined}
               onChange={(next) => update(i, next)}
               onDelete={
                 student && studentCount === 1
@@ -140,15 +135,12 @@ export function GuestGrid() {
             />
           );
         })}
-        {guests.length < TABLE_CAPACITY &&
-          (isTable ? (
-            <div className="grid grid-cols-1 gap-5 sm:col-span-2 sm:grid-cols-2">
-              <AddGuestCard label="Add student" onAdd={addStudent} />
-              <AddGuestCard label="Add guest" onAdd={addGuest} />
-            </div>
-          ) : (
-            <AddGuestCard onAdd={addGuest} />
-          ))}
+        {guests.length < TABLE_CAPACITY && (
+          <div className="grid grid-cols-1 gap-5 sm:col-span-2 sm:grid-cols-2">
+            <AddGuestCard label="Add student" onAdd={addStudent} />
+            <AddGuestCard label="Add guest" onAdd={addGuest} />
+          </div>
+        )}
       </div>
     </div>
   );
