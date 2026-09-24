@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal } from "@/lib/pricing";
 
@@ -42,14 +43,13 @@ export function PayNowScreen() {
           S${total}.00
         </p>
 
-        <div className="mt-4 flex w-full gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
-            !
-          </span>
-          <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">
-            Add {ref} as the reference so we can match your payment.
-          </p>
-        </div>
+        <PayNote>
+          Add {ref} as the reference so we can match your payment.
+        </PayNote>
+        <PayNote>
+          Please make sure to share your screenshot on +6598193518 to receive
+          the confirmed tickets.
+        </PayNote>
       </div>
 
       <button
@@ -67,6 +67,17 @@ export function PayNowScreen() {
  * Deterministic QR-look placeholder: 25×25 grid of 8px modules matching the
  * design mock. Not scannable — replaced by the real PayNow QR later.
  */
+function PayNote({ children }: { children: ReactNode }) {
+  return (
+    <div className="mt-4 flex w-full gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
+        !
+      </span>
+      <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">{children}</p>
+    </div>
+  );
+}
+
 function PlaceholderQr() {
   const cells: { x: number; y: number }[] = [];
   let seed = 7;

@@ -48,8 +48,8 @@ export const BOOKINGS_HEADER = [
   "Table",
   "Guest name",
   "Age",
-  "Dietary Preferences",
-  "Dietary restrictions",
+  "Dietary",
+  "Allergy note",
   "Cars",
   "Bus seats",
   "Contact",
@@ -58,10 +58,10 @@ export const BOOKINGS_HEADER = [
 ];
 
 export const TABLES_HEADER = [
-  "Guest name",
+  "Guest",
   "Age",
-  "Dietary Preferences",
-  "Dietary restrictions",
+  "Dietary",
+  "Allergy",
   "Student booked under",
   "Ref",
   "Status",

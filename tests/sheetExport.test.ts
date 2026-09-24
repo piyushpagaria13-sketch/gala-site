@@ -11,8 +11,8 @@ import {
 } from "../lib/sheetRows.ts";
 
 /**
- * Aryan Tan has 2 complimentary seats. Party 4 pays for 2 × S$218 = 436.
- * The Bookings tab is one row per guest, so 2 guests produce 2 rows.
+ * Aryan Tan has 2 complimentary seats. Party 4 pays for 2 × S$218.
+ * The Bookings tab is one row per guest, so 4 guests produce 4 rows.
  * The table count uses party_size, so the section still shows 4/10.
  */
 
@@ -51,6 +51,20 @@ function aryanBooking(status = "awaiting_payment"): MirrorBooking {
         allergyNote: "Peanuts",
         sortOrder: 1,
       },
+      {
+        name: "Guest Three",
+        age: "16",
+        dietary: "Fish",
+        allergyNote: "",
+        sortOrder: 2,
+      },
+      {
+        name: "Guest Four",
+        age: "18",
+        dietary: "Chicken",
+        allergyNote: "Shellfish",
+        sortOrder: 3,
+      },
     ],
   };
 }
@@ -87,15 +101,15 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     "Table",
     "Guest name",
     "Age",
-    "Dietary Preferences",
-    "Dietary restrictions",
+    "Dietary",
+    "Allergy note",
     "Cars",
     "Bus seats",
     "Contact",
     "Status",
     "Amount",
   ]);
-  assert.equal(bookings.length, 3);
+  assert.equal(bookings.length, 5);
   for (const row of bookings.slice(1)) {
     assert.equal(row[0], "GALA-0007");
     assert.equal(row[1], "Aryan Tan");
@@ -111,6 +125,10 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
   assert.equal(bookings[2][3], "Guest Two");
   assert.equal(bookings[2][5], "Vegetarian");
   assert.equal(bookings[2][6], "Peanuts");
+  assert.equal(bookings[3][3], "Guest Three");
+  assert.equal(bookings[3][5], "Fish");
+  assert.equal(bookings[4][3], "Guest Four");
+  assert.equal(bookings[4][6], "Shellfish");
 
   const tablesTab = tabs[1].rows;
   const summaryAt = tablesTab.findIndex((row) =>
@@ -127,6 +145,8 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     "awaiting_payment",
   ]);
   assert.equal(tablesTab[summaryAt + 2][0], "Guest Two");
+  assert.equal(tablesTab[summaryAt + 3][0], "Guest Three");
+  assert.equal(tablesTab[summaryAt + 4][0], "Guest Four");
   assert.equal(tabs[1].boldRows.includes(summaryAt), true);
 });
 
@@ -134,7 +154,7 @@ test("a cancelled booking leaves both tabs and the table count drops", async () 
   const before = await run(aryanBooking("awaiting_payment"));
   const after = await run(aryanBooking("cancelled"));
 
-  assert.equal(before[0].rows.length, 3);
+  assert.equal(before[0].rows.length, 5);
   assert.equal(after[0].rows.length, 1);
 
   const beforeSummary = before[1].rows.find((row) =>
