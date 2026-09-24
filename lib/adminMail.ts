@@ -1,10 +1,25 @@
 import QRCode from "qrcode";
-import { REMINDER_DEADLINE_HOURS } from "@/lib/config";
 import {
+  emailFooterHtml,
+  emailFooterText,
+  PA_CONTACT_EMAIL,
+  REMINDER_DEADLINE_HOURS,
+  SENDER_ADDRESS,
+} from "@/lib/config";
+import {
+  cancellationText,
   reminderText,
   ticketHtml,
   type AdminBooking,
 } from "@/lib/adminRules";
+
+function withFooter(html: string, text: string): { html: string; text: string } {
+  const footer = emailFooterHtml();
+  const themed = html.includes("</div>")
+    ? html.replace("</div>", `${footer}</div>`)
+    : `${html}${footer}`;
+  return { html: themed, text: `${text}\n\n${emailFooterText()}` };
+}
 
 async function sendResend(input: {
   to: string;
@@ -14,8 +29,7 @@ async function sendResend(input: {
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("Email isn't set up yet");
-  const from =
-    process.env.BOOKING_EMAIL_FROM ?? "Gala Booking <onboarding@resend.dev>";
+  const body = withFooter(input.html, input.text);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -23,14 +37,18 @@ async function sendResend(input: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from,
+      from: SENDER_ADDRESS,
+      reply_to: PA_CONTACT_EMAIL,
       to: [input.to],
       subject: input.subject,
-      html: input.html,
-      text: input.text,
+      html: body.html,
+      text: body.text,
     }),
   });
-  if (!response.ok) throw new Error("Couldn't send that email");
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail.slice(0, 180) || "Couldn't send that email");
+  }
 }
 
 export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
@@ -40,7 +58,7 @@ export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
     to: booking.email,
     subject: `Your gala ticket ${booking.ref}`,
     html,
-    text: `Your ticket ${booking.ref}. Table ${booking.tableNo}. Saturday 22 May 2027 · Fairmont Ballroom Raffles City.`,
+    text: `Your ticket ${booking.ref}. Table ${booking.tableNo}. Saturday 22 May 2027 · Fairmont Ballroom, Raffles City.`,
   });
 }
 
@@ -49,6 +67,16 @@ export async function sendReminderEmail(booking: AdminBooking): Promise<void> {
   await sendResend({
     to: booking.email,
     subject: `Payment reminder ${booking.ref}`,
+    html: `<div style="background:#0b1526;color:#e8d9a8;font-family:Georgia,serif;padding:32px;"><p style="color:#d4af37;">${text.replaceAll("\n", "<br>")}</p></div>`,
+    text,
+  });
+}
+
+export async function sendCancellationEmail(booking: AdminBooking): Promise<void> {
+  const text = cancellationText(booking);
+  await sendResend({
+    to: booking.email,
+    subject: `Booking cancelled ${booking.ref}`,
     html: `<div style="background:#0b1526;color:#e8d9a8;font-family:Georgia,serif;padding:32px;"><p style="color:#d4af37;">${text.replaceAll("\n", "<br>")}</p></div>`,
     text,
   });

@@ -72,7 +72,7 @@ export function AdminConsole({
   const callAction = async (
     path: string,
     booking: AdminBooking,
-    success: (next: AdminBooking, exportError?: string) => void,
+    success: (next: AdminBooking, exportError?: string, emailError?: string) => void,
   ) => {
     setBusy(booking.ref + path);
     setInlineNote((notes) => ({ ...notes, [booking.ref]: "" }));
@@ -87,6 +87,7 @@ export function AdminConsole({
         message?: string;
         booking?: AdminBooking;
         exportError?: string;
+        emailError?: string;
         ok?: boolean;
       };
       if (!response.ok) {
@@ -98,7 +99,7 @@ export function AdminConsole({
         setInlineNote((notes) => ({ ...notes, [booking.ref]: body.message ?? "" }));
         return;
       }
-      if (body.booking) success(body.booking, body.exportError);
+      if (body.booking) success(body.booking, body.exportError, body.emailError);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Something went wrong");
     } finally {
@@ -292,13 +293,17 @@ export function AdminConsole({
                           onClick={() => {
                             const target = booking;
                             setPendingCancel(null);
-                            void callAction("/api/admin/cancel", target, (next, exportError) =>
+                            void callAction("/api/admin/cancel", target, (next, exportError, emailError) => {
+                              const notes = [
+                                exportError ? "The Sheet did not update." : "",
+                                emailError ? "The cancellation email did not send." : "",
+                              ].filter(Boolean);
                               showToast(
-                                exportError
-                                  ? `${next.partySize} seats at Table ${next.tableNo} released. The Sheet did not update.`
-                                  : `${next.partySize} seats at Table ${next.tableNo} released.`,
-                              ),
-                            );
+                                [`${next.partySize} seats at Table ${next.tableNo} released.`, ...notes].join(
+                                  " ",
+                                ),
+                              );
+                            });
                           }}
                           className="rounded-[12px] bg-[#e0937d] px-4 py-2 text-[15px] font-semibold text-[#241a06]"
                         >

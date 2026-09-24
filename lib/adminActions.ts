@@ -1,5 +1,6 @@
 import { loadAdminBooking } from "@/lib/adminData";
-import { sendReminderEmail, sendTicketEmail } from "@/lib/adminMail";
+import { sendCancellationEmail, sendReminderEmail, sendTicketEmail } from "@/lib/adminMail";
+import { CONFIRM_CANCEL_EMAIL } from "@/lib/config";
 import {
   runCancel,
   runConfirm,
@@ -15,6 +16,8 @@ export type AdminActionResult = {
   message?: string;
   /** Set when Supabase saved and the Sheet mirror did not. */
   exportError?: string;
+  /** Set when the booking was saved and the family email did not send. */
+  emailError?: string;
 };
 
 async function exportAfterSave(): Promise<string | undefined> {
@@ -83,6 +86,14 @@ export async function cancelBooking(ref: string): Promise<AdminActionResult> {
     },
     exportSheet: () => exportAll().then(() => undefined),
   });
+  let emailError: string | undefined;
+  if (CONFIRM_CANCEL_EMAIL && booking.email.trim()) {
+    try {
+      await sendCancellationEmail(booking);
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : "Couldn't send that email";
+    }
+  }
   const fresh = (await loadAdminBooking(ref)) ?? result.booking;
-  return { ok: true, booking: fresh, exportError: result.exportError };
+  return { ok: true, booking: fresh, exportError: result.exportError, emailError };
 }

@@ -135,6 +135,15 @@ export function reminderText(booking: AdminBooking, hours: number): string {
   ].join("\n");
 }
 
+export function cancellationText(booking: AdminBooking): string {
+  const lines = [
+    `${booking.ref} has been cancelled.`,
+    `The ${booking.partySize} seats at Table ${booking.tableNo} have been released and are available for other families to book.`,
+  ];
+  if (booking.status === "paid") lines.push("", REFUND_NOTE);
+  return lines.join("\n");
+}
+
 export function ticketHtml(booking: AdminBooking, qrDataUrl: string): string {
   const names = booking.guests
     .slice()
@@ -151,7 +160,7 @@ export function ticketHtml(booking: AdminBooking, qrDataUrl: string): string {
     <p style="font-size:18px;color:#e3c46a;">${booking.ref}</p>
     <p>Table ${booking.tableNo}</p>
     <p>${names}</p>
-    <p>Saturday 22 May 2027 · Fairmont Ballroom Raffles City</p>
+    <p>Saturday 22 May 2027 · Fairmont Ballroom, Raffles City</p>
     <img alt="QR code for ${booking.ref}" src="${qrDataUrl}" width="220" height="220" style="background:#fff;padding:8px;border-radius:12px;" />
   </div>
 </body>

@@ -1,7 +1,9 @@
 /**
- * Sends the booking-copy email. No local imports, so tests can load this file.
+ * Sends the booking-copy email.
  * Delivery uses Resend when RESEND_API_KEY is set.
  */
+
+import { emailFooterText, PA_CONTACT_EMAIL, SENDER_ADDRESS } from "@/lib/config";
 
 export type BookingCopy = {
   to: string;
@@ -20,16 +22,14 @@ export function bookingCopyText(copy: BookingCopy): string {
     names ? `Guests: ${names}` : "",
     "",
     "Please share your payment screenshot on +6598193518 to receive the ticket.",
+    "",
+    emailFooterText(),
   ].join("\n");
 }
 
 export async function deliverBookingCopy(copy: BookingCopy): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("Email isn't set up yet");
-
-  const from =
-    process.env.BOOKING_EMAIL_FROM ??
-    "Gala Booking <onboarding@resend.dev>";
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -38,7 +38,8 @@ export async function deliverBookingCopy(copy: BookingCopy): Promise<void> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from,
+      from: SENDER_ADDRESS,
+      reply_to: PA_CONTACT_EMAIL,
       to: [copy.to],
       subject: `Your gala booking ${copy.ref}`,
       text: bookingCopyText(copy),
