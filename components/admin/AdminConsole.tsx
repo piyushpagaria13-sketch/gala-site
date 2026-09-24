@@ -72,7 +72,7 @@ export function AdminConsole({
   const callAction = async (
     path: string,
     booking: AdminBooking,
-    success: (next: AdminBooking) => void,
+    success: (next: AdminBooking, exportError?: string) => void,
   ) => {
     setBusy(booking.ref + path);
     setInlineNote((notes) => ({ ...notes, [booking.ref]: "" }));
@@ -86,6 +86,7 @@ export function AdminConsole({
         error?: string;
         message?: string;
         booking?: AdminBooking;
+        exportError?: string;
         ok?: boolean;
       };
       if (!response.ok) {
@@ -97,7 +98,7 @@ export function AdminConsole({
         setInlineNote((notes) => ({ ...notes, [booking.ref]: body.message ?? "" }));
         return;
       }
-      if (body.booking) success(body.booking);
+      if (body.booking) success(body.booking, body.exportError);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Something went wrong");
     } finally {
@@ -231,8 +232,12 @@ export function AdminConsole({
                       type="button"
                       disabled={!actions.confirm || busy !== null}
                       onClick={() =>
-                        void callAction("/api/admin/confirm", booking, () =>
-                          showToast(`Ticket sent for ${booking.ref}`),
+                        void callAction("/api/admin/confirm", booking, (_next, exportError) =>
+                          showToast(
+                            exportError
+                              ? `Ticket sent for ${booking.ref}. The Sheet did not update.`
+                              : `Ticket sent for ${booking.ref}`,
+                          ),
                         )
                       }
                       className="rounded-pill bg-[#d4af37] px-3 py-1.5 text-[13px] font-semibold text-[#241a06] disabled:opacity-35"
@@ -287,9 +292,11 @@ export function AdminConsole({
                           onClick={() => {
                             const target = booking;
                             setPendingCancel(null);
-                            void callAction("/api/admin/cancel", target, (next) =>
+                            void callAction("/api/admin/cancel", target, (next, exportError) =>
                               showToast(
-                                `${next.partySize} seats at Table ${next.tableNo} released.`,
+                                exportError
+                                  ? `${next.partySize} seats at Table ${next.tableNo} released. The Sheet did not update.`
+                                  : `${next.partySize} seats at Table ${next.tableNo} released.`,
                               ),
                             );
                           }}

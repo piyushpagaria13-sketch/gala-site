@@ -202,8 +202,17 @@ export async function runCancel(
     saveCancelled: (at: string) => Promise<void>;
     exportSheet: () => Promise<void>;
   },
-): Promise<AdminBooking> {
+): Promise<{ booking: AdminBooking; exportError?: string }> {
   await deps.saveCancelled(deps.now);
-  await deps.exportSheet();
-  return { ...booking, status: "cancelled", cancelledAt: deps.now };
+  let exportError: string | undefined;
+  try {
+    await deps.exportSheet();
+  } catch (error) {
+    exportError =
+      error instanceof Error ? error.message : "Sheet export failed";
+  }
+  return {
+    booking: { ...booking, status: "cancelled", cancelledAt: deps.now },
+    exportError,
+  };
 }

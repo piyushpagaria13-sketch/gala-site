@@ -125,12 +125,31 @@ test("cancelling a 3-seat paid booking releases those seats and exports the shee
   });
   assert.equal(stamped, "2026-09-24T03:00:00.000Z");
   assert.equal(exported, 1);
-  assert.equal(next.status, "cancelled");
+  assert.equal(next.exportError, undefined);
+  assert.equal(next.booking.status, "cancelled");
   const after = rows.map((row) =>
     row.partySize === 3 ? { ...row, status: "cancelled" } : row,
   );
   assert.equal(seatsFilled(after, 8), 2);
   assert.equal(seatsFilled(rows, 8) - seatsFilled(after, 8), 3);
+});
+
+test("a failed sheet export does not undo the cancel", async () => {
+  const paid = booking({ status: "paid", partySize: 3, tableNo: 8 });
+  let saved = false;
+  const next = await runCancel(paid, {
+    now: "2026-09-24T03:00:00.000Z",
+    saveCancelled: async () => {
+      saved = true;
+    },
+    exportSheet: async () => {
+      throw new Error("Sheets unavailable");
+    },
+  });
+  assert.equal(saved, true);
+  assert.equal(next.booking.status, "cancelled");
+  assert.equal(next.booking.cancelledAt, "2026-09-24T03:00:00.000Z");
+  assert.equal(next.exportError, "Sheets unavailable");
 });
 
 test("buttons follow status and cancelled rows are dimmed", () => {

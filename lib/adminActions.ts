@@ -13,7 +13,18 @@ export type AdminActionResult = {
   ok: boolean;
   booking: AdminBooking | null;
   message?: string;
+  /** Set when Supabase saved and the Sheet mirror did not. */
+  exportError?: string;
 };
+
+async function exportAfterSave(): Promise<string | undefined> {
+  try {
+    await exportAll();
+    return undefined;
+  } catch (error) {
+    return error instanceof Error ? error.message : "Sheet export failed";
+  }
+}
 
 async function requireBooking(ref: string): Promise<AdminBooking> {
   const booking = await loadAdminBooking(ref);
@@ -35,9 +46,9 @@ export async function confirmAndSendTicket(ref: string): Promise<AdminActionResu
       if (error) throw error;
     },
   });
-  if (result.sent) await exportAll();
+  const exportError = result.sent ? await exportAfterSave() : undefined;
   const fresh = (await loadAdminBooking(ref)) ?? result.booking;
-  return { ok: !result.message, booking: fresh, message: result.message };
+  return { ok: !result.message, booking: fresh, message: result.message, exportError };
 }
 
 export async function remindToPay(ref: string): Promise<AdminActionResult> {
@@ -61,7 +72,7 @@ export async function remindToPay(ref: string): Promise<AdminActionResult> {
 export async function cancelBooking(ref: string): Promise<AdminActionResult> {
   const booking = await requireBooking(ref);
   const supabase = getSupabaseServiceClient();
-  const next = await runCancel(booking, {
+  const result = await runCancel(booking, {
     now: new Date().toISOString(),
     saveCancelled: async (at) => {
       const { error } = await supabase
@@ -72,6 +83,6 @@ export async function cancelBooking(ref: string): Promise<AdminActionResult> {
     },
     exportSheet: () => exportAll().then(() => undefined),
   });
-  const fresh = (await loadAdminBooking(ref)) ?? next;
-  return { ok: true, booking: fresh };
+  const fresh = (await loadAdminBooking(ref)) ?? result.booking;
+  return { ok: true, booking: fresh, exportError: result.exportError };
 }
