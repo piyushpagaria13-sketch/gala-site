@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { sendBookingCopy } from "@/app/actions/sendBookingEmail";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
-import { updateBookingEmail } from "@/lib/bookings";
 
 /**
  * "You're booked!" — terminal screen after payment (or a fully complimentary
- * booking). Email Send is the only post-commit write: updateBookingEmail.
+ * booking). Send stores the address, emails a copy, and marks the sheet Sent.
  */
 export function ConfirmationScreen() {
   const { draft, setDraft } = useBookingDraft();
@@ -16,8 +16,6 @@ export function ConfirmationScreen() {
   const [sendError, setSendError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
-  const student = draft.student?.name ?? "";
-  const firstName = student.trim().split(/\s+/)[0] ?? "";
   const seats = partySeatCount(draft);
   const names = draft.guests
     .map((g) => g.name.trim())
@@ -32,7 +30,7 @@ export function ConfirmationScreen() {
     setSending(true);
     setSendError(null);
     try {
-      await updateBookingEmail(ref, trimmed);
+      await sendBookingCopy(ref, trimmed);
       setDraft({
         ...draft,
         contact: { ...draft.contact, email: trimmed },
@@ -60,13 +58,26 @@ export function ConfirmationScreen() {
       </div>
 
       <h1 className="mt-[18px] text-center font-display text-[30px] font-medium text-[#e3c46a]">
-        You&apos;re booked{firstName ? `, ${firstName}` : ""}!
+        You&apos;re booked!
       </h1>
       <p className="mt-2 text-center text-[15px] text-[#9a7f3e]">
         {paid
           ? "Your seats are reserved. No payment is due."
           : "Your seats are reserved. Payment will be verified by your Grade Rep."}
       </p>
+
+      <div className="mt-4 flex w-full max-w-[480px] gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
+          !
+        </span>
+        <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">
+          Please share your screenshot on{" "}
+          <span className="text-[19px] font-black leading-none text-[#ffe56a]">
+            +6598193518
+          </span>{" "}
+          to receive the ticket.
+        </p>
+      </div>
 
       <div className="mt-[26px] w-full max-w-[480px] rounded-card border border-[#6e5a2b] bg-[#1a1610] px-7 py-6">
         <div className="flex items-baseline justify-between">

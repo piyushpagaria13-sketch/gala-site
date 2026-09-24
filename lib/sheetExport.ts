@@ -24,6 +24,7 @@ type BookingRow = {
   cars: number;
   bus_seats: number;
   contact: string | null;
+  email: string | null;
   status: string;
   amount: number;
   student_id: string | null;
@@ -59,7 +60,7 @@ export async function loadSnapshot(): Promise<SheetSnapshot> {
     supabase
       .from("bookings")
       .select(
-        "id, ref, table_no, party_size, cars, bus_seats, contact, status, amount, student_id",
+        "id, ref, table_no, party_size, cars, bus_seats, contact, status, amount, email, student_id",
       )
       .neq("status", "cancelled"),
     supabase.from("tables").select("table_no, blocked"),
@@ -108,6 +109,7 @@ export async function loadSnapshot(): Promise<SheetSnapshot> {
     cars: row.cars,
     busSeats: row.bus_seats,
     contact: row.contact ?? "",
+    email: row.email ?? "",
     status: row.status,
     amount: row.amount,
     guests: guestsByBooking.get(row.id) ?? [],

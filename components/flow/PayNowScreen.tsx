@@ -17,45 +17,49 @@ export function PayNowScreen() {
   const ref = draft.bookingRef ?? "GALA27";
 
   return (
-    <div className="flex w-full flex-col items-center px-4 pb-8 pt-5">
-      <h1 className="text-center font-display text-[30px] font-medium text-[#e3c46a]">
+    <div className="flex h-full min-h-0 w-full flex-col items-center px-4 pb-3 pt-1">
+      <h1 className="mt-3 shrink-0 text-center font-display text-[30px] font-medium leading-none text-[#e3c46a]">
         Pay using PayNow
       </h1>
 
-      <div className="mt-[22px] flex w-full max-w-[480px] flex-col items-center rounded-card border border-[#6e5a2b] bg-[#1a1610] px-7 pb-7 pt-[26px]">
-        <p className="text-[15px] text-[#e8d9a8]">
+      <PayNote className="mt-3 max-w-[480px] shrink-0">
+        <span className="text-[21px] font-bold leading-[1.3]">
+          Don&apos;t forget to take a screenshot of your payment
+        </span>
+      </PayNote>
+
+      <div className="mt-6 flex w-full max-w-[480px] flex-col items-center rounded-card border border-[#6e5a2b] bg-[#1a1610] px-7 py-4">
+        <p className="shrink-0 text-[15px] text-[#e8d9a8]">
           Scan this QR code with your banking app
         </p>
 
-        <div className="relative mt-[18px] h-[224px] w-[224px] overflow-clip rounded-[12px] bg-[#fffdf8]">
-          <PlaceholderQr />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-[#fffdf8] px-2 py-1 text-center text-[16px] font-bold leading-[normal] tracking-[0.64px] text-[#7b1f8a]">
-              PAY
-              <br />
-              NOW
+        <div className="mt-3 flex w-full items-center justify-center">
+          <div className="relative h-[200px] w-[200px] overflow-clip rounded-[12px] bg-[#fffdf8]">
+            <PlaceholderQr />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-[#fffdf8] px-2 py-1 text-center text-[16px] font-bold leading-[normal] tracking-[0.64px] text-[#7b1f8a]">
+                PAY
+                <br />
+                NOW
+              </div>
             </div>
           </div>
         </div>
 
-        <p className="mt-[18px] text-[13px] text-[#9a7f3e]">Amount</p>
-        <p className="mt-[2px] font-display text-[34px] font-medium text-[#e3c46a]">
+        <p className="mt-3 shrink-0 text-[13px] text-[#9a7f3e]">Amount</p>
+        <p className="mt-0.5 shrink-0 font-display text-[34px] font-medium leading-none text-[#e3c46a]">
           S${total}.00
         </p>
 
-        <PayNote>
+        <PayNote className="mt-3 shrink-0">
           Add {ref} as the reference so we can match your payment.
-        </PayNote>
-        <PayNote>
-          Please make sure to share your screenshot on +6598193518 to receive
-          the confirmed tickets.
         </PayNote>
       </div>
 
       <button
         type="button"
         onClick={() => goNext()}
-        className="mt-[18px] w-full max-w-[480px] rounded-pill bg-gold py-[15px] text-[16px] font-semibold text-[#241a06]"
+        className="mt-3 w-full max-w-[480px] shrink-0 rounded-pill bg-gold py-3.5 text-[16px] font-semibold text-[#241a06]"
       >
         I&apos;ve paid
       </button>
@@ -67,9 +71,17 @@ export function PayNowScreen() {
  * Deterministic QR-look placeholder: 25×25 grid of 8px modules matching the
  * design mock. Not scannable — replaced by the real PayNow QR later.
  */
-function PayNote({ children }: { children: ReactNode }) {
+function PayNote({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="mt-4 flex w-full gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
+    <div
+      className={`flex w-full gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px] ${className}`}
+    >
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
         !
       </span>

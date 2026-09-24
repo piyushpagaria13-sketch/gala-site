@@ -14,14 +14,15 @@ export function FlowBreadcrumb() {
 
   const student = draft.student?.name ?? "";
   const seats = partySeatCount(draft);
+  const seatLabel = `${seats} ${seats === 1 ? "seat" : "seats"}`;
   const label =
     step === "review"
       ? "Review your booking"
       : step === "guests" || step === "pay"
-        ? `Table ${draft.tableNo} · ${seats} seats`
+        ? `Table ${draft.tableNo} · ${seatLabel}`
         : draft.tableNo !== null
-          ? `Table ${draft.tableNo} · ${seats} seats · ${student}`
-          : `${seats} seats · ${student}`;
+          ? `Table ${draft.tableNo} · ${seatLabel} · ${student}`
+          : `${seatLabel} · ${student}`;
 
   return (
     <span className="pointer-events-none absolute inset-x-0 top-[26px] flex h-[44px] items-center justify-center px-24 text-center text-[13px] font-medium text-[#9a7f3e]">

@@ -13,18 +13,32 @@ import { useBookingDraft } from "@/lib/bookingDraft";
 export function StudentSearch() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const [name, setName] = useState(draft.student?.name ?? "");
+  const [phone, setPhone] = useState(draft.contact?.phone ?? "");
 
   useEffect(() => {
-    setStepValid(Boolean(name.trim()));
-  }, [name, setStepValid]);
+    setStepValid(Boolean(name.trim() && phone.trim()));
+  }, [name, phone, setStepValid]);
 
   const handleNameChange = (value: string) => {
     setName(value);
     const trimmed = value.trim();
-    setStepValid(trimmed.length > 0);
     setDraft({
       ...draft,
-      student: trimmed ? { id: "", name: trimmed, compSeats: 0 } : null,
+      student: trimmed
+        ? { ...(draft.student ?? { id: "", compSeats: 0 }), name: trimmed }
+        : null,
+      contact: { ...draft.contact, phone },
+    });
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    setDraft({
+      ...draft,
+      student: name.trim()
+        ? { ...(draft.student ?? { id: "", compSeats: 0 }), name: name.trim() }
+        : draft.student,
+      contact: { ...draft.contact, phone: value },
     });
   };
 
@@ -48,6 +62,22 @@ export function StudentSearch() {
           onChange={(e) => handleNameChange(e.target.value)}
           placeholder="Start typing a name"
           autoComplete="off"
+          className="w-full rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] focus:border-gold"
+        />
+      </div>
+
+      <div className="relative mt-5 flex w-full flex-col gap-2">
+        <label htmlFor="student-phone" className="text-[13px] text-[#9a7f3e]">
+          Add Phone Number
+        </label>
+        <input
+          id="student-phone"
+          type="tel"
+          required
+          value={phone}
+          onChange={(e) => handlePhoneChange(e.target.value)}
+          placeholder="+65"
+          autoComplete="tel"
           className="w-full rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] focus:border-gold"
         />
         <p className="text-[13px] leading-[1.5] text-[#77633a]">

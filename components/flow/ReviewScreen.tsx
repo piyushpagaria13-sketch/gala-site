@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { BusModal, CountModal } from "@/components/flow/BusModal";
+import { BusModal } from "@/components/flow/BusModal";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
 
@@ -14,8 +14,8 @@ import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
  */
 export function ReviewScreen() {
   const { draft, setDraft, goToStep } = useBookingDraft();
-  const [parkingOpen, setParkingOpen] = useState(false);
   const [busOpen, setBusOpen] = useState(false);
+  const parkingOn = draft.cars > 0;
 
   const seats = partySeatCount(draft);
   const student = draft.student?.name ?? "";
@@ -70,15 +70,35 @@ export function ReviewScreen() {
             </div>
           </div>
 
-          <OptionCard
-            label="Car parking"
-            value={
-              draft.cars > 0
-                ? `${draft.cars} ${draft.cars === 1 ? "pass" : "passes"}`
-                : null
+          <button
+            type="button"
+            role="switch"
+            aria-checked={parkingOn}
+            onClick={() =>
+              setDraft({ ...draft, cars: parkingOn ? 0 : 1 })
             }
-            onClick={() => setParkingOpen(true)}
-          />
+            className="flex w-full items-center justify-between rounded-card border-[1.5px] border-dashed border-[#8a6f35] px-5 py-4 transition-colors hover:border-gold"
+          >
+            <span className="flex items-baseline gap-[6px] text-[16px]">
+              <span className="font-medium text-gold">Car parking</span>
+              {parkingOn ? (
+                <span className="text-[#d9bd6f]">1 pass</span>
+              ) : (
+                <span className="text-[#77633a]">(optional)</span>
+              )}
+            </span>
+            <span
+              className={`relative h-[31px] w-[51px] shrink-0 rounded-pill transition-colors duration-200 ${
+                parkingOn ? "bg-[#34c759]" : "bg-[#39322a]"
+              }`}
+            >
+              <span
+                className={`absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-pill bg-white shadow-[0_3px_8px_rgba(0,0,0,0.35)] transition-transform duration-200 ${
+                  parkingOn ? "translate-x-[20px]" : "translate-x-0"
+                }`}
+              />
+            </span>
+          </button>
           <OptionCard
             label="Shuttle bus"
             value={
@@ -125,16 +145,6 @@ export function ReviewScreen() {
         </div>
       </div>
 
-      <CountModal
-        open={parkingOpen}
-        onClose={() => setParkingOpen(false)}
-        titleId="parking-dialog-title"
-        title="Car parking"
-        description="Complimentary parking passes for on-site parking at Raffles City."
-        fieldLabel="Parking passes"
-        saved={draft.cars}
-        onSave={(cars) => setDraft({ ...draft, cars })}
-      />
       <BusModal open={busOpen} onClose={() => setBusOpen(false)} />
     </div>
   );

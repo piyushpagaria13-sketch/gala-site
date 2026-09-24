@@ -117,7 +117,9 @@ export function isGuestComplete(guest: Guest): boolean {
 function isStepComplete(step: BookingStep, draft: BookingDraft): boolean {
   switch (step) {
     case "student":
-      return Boolean(draft.student?.name.trim());
+      return Boolean(
+        draft.student?.name.trim() && draft.contact?.phone?.trim(),
+      );
     case "type":
       return draft.type !== null;
     case "table":

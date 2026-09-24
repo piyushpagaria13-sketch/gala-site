@@ -22,6 +22,8 @@ export type MirrorBooking = {
   contact: string;
   status: string;
   amount: number;
+  /** Set once the guest asks for a copy. The sheet shows "Sent", not the address. */
+  email: string;
   guests: MirrorGuest[];
 };
 
@@ -46,6 +48,7 @@ export const BOOKINGS_HEADER = [
   "Ref",
   "Student",
   "Table",
+  "Seats",
   "Guest name",
   "Age",
   "Dietary",
@@ -55,6 +58,7 @@ export const BOOKINGS_HEADER = [
   "Contact",
   "Status",
   "Amount",
+  "Email",
 ];
 
 export const TABLES_HEADER = [
@@ -65,6 +69,7 @@ export const TABLES_HEADER = [
   "Student booked under",
   "Ref",
   "Status",
+  "Seats",
 ];
 
 function activeBookings(snapshot: SheetSnapshot): MirrorBooking[] {
@@ -85,6 +90,7 @@ export function bookingsTab(snapshot: SheetSnapshot): string[][] {
       booking.ref,
       booking.student,
       String(booking.tableNo),
+      String(booking.partySize),
       guest.name,
       guest.age,
       guest.dietary,
@@ -94,6 +100,7 @@ export function bookingsTab(snapshot: SheetSnapshot): string[][] {
       booking.contact,
       booking.status,
       String(booking.amount),
+      booking.email ? "Sent" : "",
     ]),
   );
   return [BOOKINGS_HEADER, ...rows];
@@ -119,7 +126,7 @@ export function tablesTab(snapshot: SheetSnapshot): {
 
   const rows: string[][] = [TABLES_HEADER];
   const boldRows: number[] = [];
-  const blank = ["", "", "", "", "", ""];
+  const blank = ["", "", "", "", "", "", ""];
 
   for (let tableNo = 1; tableNo <= TABLE_COUNT; tableNo++) {
     boldRows.push(rows.length);
@@ -150,6 +157,7 @@ export function tablesTab(snapshot: SheetSnapshot): {
           booking.student,
           booking.ref,
           booking.status,
+          String(booking.partySize),
         ]);
       }
     }
@@ -186,7 +194,7 @@ export function sheetFormatRequests(sheetId: number, boldRows: number[]) {
           startRowIndex: 0,
           endRowIndex: 2000,
           startColumnIndex: 0,
-          endColumnIndex: 12,
+          endColumnIndex: 14,
         },
         cell: { userEnteredFormat: { textFormat: { bold: false } } },
         fields: "userEnteredFormat.textFormat.bold",

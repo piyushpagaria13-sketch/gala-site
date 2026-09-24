@@ -34,6 +34,7 @@ function aryanBooking(status = "awaiting_payment"): MirrorBooking {
     cars: 1,
     busSeats: 2,
     contact: "+65 8111 0000",
+    email: "",
     status,
     amount: AMOUNT,
     guests: [
@@ -99,6 +100,7 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     "Ref",
     "Student",
     "Table",
+    "Seats",
     "Guest name",
     "Age",
     "Dietary",
@@ -108,27 +110,32 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     "Contact",
     "Status",
     "Amount",
+    "Email",
   ]);
   assert.equal(bookings.length, 5);
   for (const row of bookings.slice(1)) {
     assert.equal(row[0], "GALA-0007");
     assert.equal(row[1], "Aryan Tan");
     assert.equal(row[2], "40");
-    assert.equal(row[7], "1");
-    assert.equal(row[8], "2");
-    assert.equal(row[9], "+65 8111 0000");
-    assert.equal(row[10], "awaiting_payment");
-    assert.equal(row[11], String(AMOUNT));
+    assert.equal(row[3], "4");
+    assert.equal(row[8], "1");
+    assert.equal(row[9], "2");
+    assert.equal(row[10], "+65 8111 0000");
+    assert.equal(row[11], "awaiting_payment");
+    assert.equal(row[12], String(AMOUNT));
+    assert.equal(row[13], "");
   }
-  assert.equal(bookings[1][3], "Guest One");
-  assert.equal(bookings[1][5], "Chicken");
-  assert.equal(bookings[2][3], "Guest Two");
-  assert.equal(bookings[2][5], "Vegetarian");
-  assert.equal(bookings[2][6], "Peanuts");
-  assert.equal(bookings[3][3], "Guest Three");
-  assert.equal(bookings[3][5], "Fish");
-  assert.equal(bookings[4][3], "Guest Four");
-  assert.equal(bookings[4][6], "Shellfish");
+  const sent = await run({ ...aryanBooking(), email: "guest@example.com" });
+  assert.equal(sent[0].rows[1][13], "Sent");
+  assert.equal(bookings[1][4], "Guest One");
+  assert.equal(bookings[1][6], "Chicken");
+  assert.equal(bookings[2][4], "Guest Two");
+  assert.equal(bookings[2][6], "Vegetarian");
+  assert.equal(bookings[2][7], "Peanuts");
+  assert.equal(bookings[3][4], "Guest Three");
+  assert.equal(bookings[3][6], "Fish");
+  assert.equal(bookings[4][4], "Guest Four");
+  assert.equal(bookings[4][7], "Shellfish");
 
   const tablesTab = tabs[1].rows;
   const summaryAt = tablesTab.findIndex((row) =>
@@ -143,6 +150,7 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     "Aryan Tan",
     "GALA-0007",
     "awaiting_payment",
+    "4",
   ]);
   assert.equal(tablesTab[summaryAt + 2][0], "Guest Two");
   assert.equal(tablesTab[summaryAt + 3][0], "Guest Three");
