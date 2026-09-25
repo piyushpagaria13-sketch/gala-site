@@ -108,9 +108,10 @@ export function partySeatCount(draft: BookingDraft): number {
   return draft.partySize ?? 1;
 }
 
-/** A guest card is complete once name and dietary choice are filled. */
+/** A guest card is complete once name, title, and dietary choice are filled. Students have no title. */
 export function isGuestComplete(guest: Guest): boolean {
-  return Boolean(guest.name.trim() && guest.dietary);
+  const titled = guest.kind === "student" || Boolean(guest.title);
+  return Boolean(guest.name.trim() && guest.dietary && titled);
 }
 
 /** Validity of a step, derived from what the draft already holds. */

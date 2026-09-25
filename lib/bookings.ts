@@ -48,6 +48,7 @@ export async function createBooking(
       age: guest.age ?? "",
       dietary: guest.dietary ?? "",
       allergy_note: guest.allergyNote ?? "",
+      title: guest.title ?? "",
     })),
     p_cars: input.cars,
     p_bus_seats: input.busSeats,

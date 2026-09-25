@@ -12,6 +12,13 @@ import type { Guest } from "@/lib/types";
 
 export const DIETARY_OPTIONS = ["Vegetarian", "Chicken", "Fish"];
 
+export const TITLE_OPTIONS = [
+  "Mother/Father",
+  "Siblings @UWCSEA",
+  "Alumni",
+  "Others",
+];
+
 const FIELD =
   "w-full rounded-[10px] border border-[#6e5a2b] px-[14px] py-3 text-[15px] text-[#e8d9a8] outline-none transition-colors placeholder:text-[#77633a] focus:border-gold";
 
@@ -173,6 +180,40 @@ export function GuestCard({
           />
         </button>
       </div>
+
+      {!badge && (
+        <div className="mt-3 flex flex-col gap-[6px]">
+          <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-title`}>
+            Title
+          </label>
+          <div className="relative">
+            <select
+              id={`${id}-title`}
+              value={guest.title ?? ""}
+              onChange={(e) => onChange({ ...guest, title: e.target.value })}
+              className={`${FIELD} appearance-none bg-[#1a1610] pr-9 ${
+                guest.title ? "text-[#e8d9a8]" : "text-[#77633a]"
+              }`}
+            >
+              <option value="" disabled>
+                Select
+              </option>
+              {TITLE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <Image
+              src="/book/icon-select-down.svg"
+              alt=""
+              width={10}
+              height={6}
+              className="pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="mt-3 flex flex-col gap-[6px]">
         <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-diet`}>

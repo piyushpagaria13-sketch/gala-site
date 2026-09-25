@@ -18,6 +18,8 @@ export type Student = {
 export type Guest = {
   name: string;
   age?: string;
+  /** Mother/Father, sibling, alumni, or other. Guest cards only. */
+  title?: string;
   dietary?: string;
   allergyNote?: string;
   /** Table bookings can include extra graduates. The first student cannot be removed. */
