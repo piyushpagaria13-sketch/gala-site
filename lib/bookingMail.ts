@@ -1,52 +1,34 @@
 /**
- * Sends the booking-copy email.
+ * Sends the booking-received email from the confirmation page.
  * Delivery uses Resend when RESEND_API_KEY is set.
  */
 
-import { emailFooterText, PA_CONTACT_EMAIL, SENDER_ADDRESS } from "@/lib/config";
+import { sendBookingReceivedEmail } from "@/lib/adminMail";
+import { bookingReceivedText } from "@/lib/bookingReceived";
 
 export type BookingCopy = {
   to: string;
   ref: string;
   tableNo: number;
+  partySize: number;
   guests: string[];
 };
 
 export function bookingCopyText(copy: BookingCopy): string {
-  const names = copy.guests.filter(Boolean).join(", ");
-  return [
-    "You're booked for the UWCSEA Dover Graduation Gala Dinner.",
-    "",
-    `Reference: ${copy.ref}`,
-    `Table: ${copy.tableNo}`,
-    names ? `Guests: ${names}` : "",
-    "",
-    "Please share your payment screenshot on +6598193518 to receive the ticket.",
-    "",
-    emailFooterText(),
-  ].join("\n");
+  return bookingReceivedText({
+    ref: copy.ref,
+    tableNo: copy.tableNo,
+    partySize: copy.partySize,
+    guests: copy.guests,
+  });
 }
 
 export async function deliverBookingCopy(copy: BookingCopy): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("Email isn't set up yet");
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: SENDER_ADDRESS,
-      reply_to: PA_CONTACT_EMAIL,
-      to: [copy.to],
-      subject: `Your gala booking ${copy.ref}`,
-      text: bookingCopyText(copy),
-    }),
+  await sendBookingReceivedEmail({
+    to: copy.to,
+    ref: copy.ref,
+    tableNo: copy.tableNo,
+    partySize: copy.partySize,
+    guests: copy.guests,
   });
-
-  if (!response.ok) {
-    throw new Error("Couldn't send that email");
-  }
 }

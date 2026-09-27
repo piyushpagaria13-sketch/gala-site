@@ -5,7 +5,7 @@ import {
   bookingReceivedText,
 } from "../lib/bookingReceived.ts";
 
-test("a 3-seat booking at table 23 names the table, seats, and guests", () => {
+test("booking-received auto-reply uses the pending-confirmation copy", () => {
   const text = bookingReceivedText({
     ref: "GALA-0231",
     tableNo: 23,
@@ -13,13 +13,15 @@ test("a 3-seat booking at table 23 names the table, seats, and guests", () => {
     guests: ["Aryan Tan", "Priya Tan", "Rajesh Tan"],
   });
 
-  assert.match(text, /Table 23/);
-  assert.match(text, /3 seats/);
-  assert.match(text, /Aryan Tan/);
-  assert.match(text, /Priya Tan/);
-  assert.match(text, /Rajesh Tan/);
   assert.equal(
-    bookingReceivedSubject("GALA-0231"),
-    "We've received your booking request — GALA-0231 (pending confirmation)",
+    bookingReceivedSubject(),
+    "We've received your booking request! (Pending Confirmation)",
   );
+  assert.match(text, /Graduation Gala Dinner 2027/);
+  assert.match(text, /22 May at 7:30/);
+  assert.match(
+    text,
+    /Look out for another email with confirmation of your tickets/,
+  );
+  assert.match(text, /The graduation committee/);
 });

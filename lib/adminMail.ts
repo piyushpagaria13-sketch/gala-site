@@ -102,7 +102,7 @@ export async function sendBookingReceivedEmail(input: {
   };
   await sendResend({
     to: input.to,
-    subject: bookingReceivedSubject(input.ref),
+    subject: bookingReceivedSubject(),
     html: bookingReceivedHtml(payload),
     text: bookingReceivedText(payload),
   });

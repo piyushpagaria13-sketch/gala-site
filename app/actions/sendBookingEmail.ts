@@ -1,13 +1,13 @@
 "use server";
 
-import { deliverBookingCopy } from "@/lib/bookingMail";
+import { sendBookingReceivedEmail } from "@/lib/adminMail";
 import { exportAll } from "@/lib/sheetExport";
 import { getSupabaseServiceClient } from "@/lib/supabase";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Save the address, send the booking copy, then mark the sheet Email column Sent.
+ * Save the address, send the booking-received note, then mark the sheet Email column Sent.
  * The address is stored on the booking. The sheet only shows "Sent".
  */
 export async function sendBookingCopy(
@@ -22,7 +22,7 @@ export async function sendBookingCopy(
   const supabase = getSupabaseServiceClient();
   const { data: booking, error: lookupError } = await supabase
     .from("bookings")
-    .select("id, ref, table_no")
+    .select("id, ref, table_no, party_size")
     .eq("ref", ref)
     .maybeSingle();
 
@@ -37,10 +37,11 @@ export async function sendBookingCopy(
 
   if (guestError) throw guestError;
 
-  await deliverBookingCopy({
+  await sendBookingReceivedEmail({
     to: trimmed,
     ref: booking.ref,
     tableNo: booking.table_no,
+    partySize: booking.party_size,
     guests: (guests ?? []).map((guest) => guest.name),
   });
 
