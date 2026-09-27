@@ -7,6 +7,7 @@ import {
   partySeatCount,
   useBookingDraft,
 } from "@/lib/bookingDraft";
+import { notifyBookingReceived } from "@/app/actions/sendBookingReceived";
 import { syncSheetAfterChange } from "@/app/actions/syncSheet";
 import {
   BookingCapacityError,
@@ -111,6 +112,13 @@ export function ContinueButton() {
         bookingId: created.id,
         amount: created.amount,
         bookingStatus: created.status,
+      });
+      void notifyBookingReceived({
+        email: draft.contact?.email ?? null,
+        ref: created.ref,
+        tableNo: draft.tableNo,
+        partySize: partySeatCount(draft),
+        guests: draft.guests.map((guest) => guest.name),
       });
       void syncSheetAfterChange().catch((error) => {
         console.error("Sheet sync failed", error);

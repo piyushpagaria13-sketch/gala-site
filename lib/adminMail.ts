@@ -12,6 +12,11 @@ import {
   ticketHtml,
   type AdminBooking,
 } from "@/lib/adminRules";
+import {
+  bookingReceivedHtml,
+  bookingReceivedSubject,
+  bookingReceivedText,
+} from "@/lib/bookingReceived";
 
 function withFooter(html: string, text: string): { html: string; text: string } {
   const footer = emailFooterHtml();
@@ -79,5 +84,26 @@ export async function sendCancellationEmail(booking: AdminBooking): Promise<void
     subject: `Booking cancelled ${booking.ref}`,
     html: `<div style="background:#0b1526;color:#e8d9a8;font-family:Georgia,serif;padding:32px;"><p style="color:#d4af37;">${text.replaceAll("\n", "<br>")}</p></div>`,
     text,
+  });
+}
+
+export async function sendBookingReceivedEmail(input: {
+  to: string;
+  ref: string;
+  tableNo: number;
+  partySize: number;
+  guests: string[];
+}): Promise<void> {
+  const payload = {
+    ref: input.ref,
+    tableNo: input.tableNo,
+    partySize: input.partySize,
+    guests: input.guests,
+  };
+  await sendResend({
+    to: input.to,
+    subject: bookingReceivedSubject(input.ref),
+    html: bookingReceivedHtml(payload),
+    text: bookingReceivedText(payload),
   });
 }

@@ -15,7 +15,13 @@ function isStudent(guest: Guest, index: number): boolean {
 }
 
 function isBlank(guest: Guest): boolean {
-  return !guest.name.trim() && !guest.dietary && !guest.allergyNote;
+  return (
+    !guest.name.trim() &&
+    !guest.graduatingStudent?.trim() &&
+    !guest.title &&
+    !guest.dietary &&
+    !guest.allergyNote
+  );
 }
 
 function startingCards(studentName: string): Guest[] {
@@ -88,10 +94,6 @@ export function GuestGrid() {
 
   const removeGuest = (index: number) => {
     if (guests.length <= 1) return;
-    if (isStudent(guests[index], index)) {
-      const firstStudent = guests.findIndex((guest, i) => isStudent(guest, i));
-      if (index === firstStudent) return;
-    }
     commit(guests.filter((_, i) => i !== index));
   };
 
@@ -128,9 +130,7 @@ export function GuestGrid() {
               nameOptions={student ? CLASS_NAMES : undefined}
               onChange={(next) => update(i, next)}
               onDelete={
-                student && studentCount === 1
-                  ? undefined
-                  : () => removeGuest(i)
+                guests.length <= 1 ? undefined : () => removeGuest(i)
               }
             />
           );

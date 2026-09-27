@@ -2,17 +2,18 @@
 
 import Image from "next/image";
 import { useId, useMemo, useState } from "react";
+import { CLASS_NAMES } from "@/lib/classList";
 import type { Guest } from "@/lib/types";
 
 /**
  * One attendee card on the "Who's coming?" grid — name, 18+ toggle, dietary
- * option, and optional allergy note. The student card carries a GRADUATE
- * badge and a darker name field (prefilled from the first step).
+ * option, and optional allergy note. Guest cards also collect graduating
+ * student and relationship. The student card carries a GRADUATE badge.
  */
 
 export const DIETARY_OPTIONS = ["Vegetarian", "Chicken", "Fish"];
 
-export const TITLE_OPTIONS = [
+export const RELATIONSHIP_OPTIONS = [
   "Mother/Father",
   "Siblings @UWCSEA",
   "Alumni",
@@ -21,6 +22,80 @@ export const TITLE_OPTIONS = [
 
 const FIELD =
   "w-full rounded-[10px] border border-[#6e5a2b] px-[14px] py-3 text-[15px] text-[#e8d9a8] outline-none transition-colors placeholder:text-[#77633a] focus:border-gold";
+
+function NameCombobox({
+  id,
+  value,
+  placeholder,
+  options,
+  onChange,
+  fieldClass,
+}: {
+  id: string;
+  value: string;
+  placeholder: string;
+  options: string[];
+  onChange: (value: string) => void;
+  fieldClass: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState<string | null>(null);
+  const matches = useMemo(() => {
+    const q = (query ?? "").trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((name) => name.toLowerCase().includes(q));
+  }, [options, query]);
+
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        type="text"
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-autocomplete="list"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => {
+          setQuery(null);
+          setOpen(true);
+        }}
+        onBlur={() => setOpen(false)}
+        className={fieldClass}
+      />
+      {open && matches.length > 0 && (
+        <ul
+          id={`${id}-list`}
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-auto rounded-[10px] border border-[#6e5a2b] bg-[#1a1610] py-1 shadow-xl"
+        >
+          {matches.map((name) => (
+            <li key={name}>
+              <button
+                type="button"
+                role="option"
+                className="w-full px-[14px] py-2 text-left text-[15px] text-[#e8d9a8] hover:bg-[#241a06]"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  onChange(name);
+                  setOpen(false);
+                }}
+              >
+                {name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 type GuestCardProps = {
   /** "Student" or "Guest N". */
@@ -31,7 +106,7 @@ type GuestCardProps = {
   onChange: (next: Guest) => void;
   /** Class-list names. When set, the name field opens this dropdown. */
   nameOptions?: string[];
-  /** Remove this card. Omitted on the student card — the graduate can't be deleted. */
+  /** Remove this card. Hidden only when it is the last remaining card. */
   onDelete?: () => void;
 };
 
@@ -44,14 +119,6 @@ export function GuestCard({
   nameOptions,
 }: GuestCardProps) {
   const id = useId();
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState<string | null>(null);
-  const options = useMemo(() => {
-    if (!nameOptions) return [];
-    const q = (query ?? "").trim().toLowerCase();
-    if (!q) return nameOptions;
-    return nameOptions.filter((name) => name.toLowerCase().includes(q));
-  }, [nameOptions, query]);
 
   return (
     <div className="rounded-card border border-[#6e5a2b] bg-[#1a1610] px-5 pb-[22px] pt-5">
@@ -92,53 +159,14 @@ export function GuestCard({
           Name
         </label>
         {nameOptions ? (
-          <div className="relative">
-            <input
-              id={`${id}-name`}
-              type="text"
-              role="combobox"
-              aria-expanded={open}
-              aria-controls={`${id}-names`}
-              aria-autocomplete="list"
-              value={guest.name}
-              placeholder="Choose a student"
-              onChange={(e) => {
-                onChange({ ...guest, name: e.target.value });
-                setQuery(e.target.value);
-                setOpen(true);
-              }}
-              onFocus={() => {
-                setQuery(null);
-                setOpen(true);
-              }}
-              onBlur={() => setOpen(false)}
-              className={`${FIELD} bg-[#131008]`}
-            />
-            {open && options.length > 0 && (
-              <ul
-                id={`${id}-names`}
-                role="listbox"
-                className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-auto rounded-[10px] border border-[#6e5a2b] bg-[#1a1610] py-1 shadow-xl"
-              >
-                {options.map((name) => (
-                  <li key={name}>
-                    <button
-                      type="button"
-                      role="option"
-                      className="w-full px-[14px] py-2 text-left text-[15px] text-[#e8d9a8] hover:bg-[#241a06]"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        onChange({ ...guest, name });
-                        setOpen(false);
-                      }}
-                    >
-                      {name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <NameCombobox
+            id={`${id}-name`}
+            value={guest.name}
+            placeholder="Choose a student"
+            options={nameOptions}
+            onChange={(name) => onChange({ ...guest, name })}
+            fieldClass={`${FIELD} bg-[#131008]`}
+          />
         ) : (
           <input
             id={`${id}-name`}
@@ -150,6 +178,27 @@ export function GuestCard({
           />
         )}
       </div>
+
+      {!badge && (
+        <div className="mt-3 flex flex-col gap-[6px]">
+          <label
+            className="text-[12px] text-[#9a7f3e]"
+            htmlFor={`${id}-graduate`}
+          >
+            Graduating Student
+          </label>
+          <NameCombobox
+            id={`${id}-graduate`}
+            value={guest.graduatingStudent ?? ""}
+            placeholder="Start typing a name"
+            options={CLASS_NAMES}
+            onChange={(name) =>
+              onChange({ ...guest, graduatingStudent: name })
+            }
+            fieldClass={`${FIELD} bg-[#1a1610]`}
+          />
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-between gap-4">
         <label
@@ -183,12 +232,15 @@ export function GuestCard({
 
       {!badge && (
         <div className="mt-3 flex flex-col gap-[6px]">
-          <label className="text-[12px] text-[#9a7f3e]" htmlFor={`${id}-title`}>
-            Title
+          <label
+            className="text-[12px] text-[#9a7f3e]"
+            htmlFor={`${id}-relationship`}
+          >
+            Relationship
           </label>
           <div className="relative">
             <select
-              id={`${id}-title`}
+              id={`${id}-relationship`}
               value={guest.title ?? ""}
               onChange={(e) => onChange({ ...guest, title: e.target.value })}
               className={`${FIELD} appearance-none bg-[#1a1610] pr-9 ${
@@ -198,7 +250,7 @@ export function GuestCard({
               <option value="" disabled>
                 Select
               </option>
-              {TITLE_OPTIONS.map((option) => (
+              {RELATIONSHIP_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

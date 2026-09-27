@@ -17,12 +17,13 @@ export type Student = {
 
 export type Guest = {
   name: string;
+  /** Graduating student this guest is attending with. Guest cards only. */
+  graduatingStudent?: string;
   age?: string;
   /** Mother/Father, sibling, alumni, or other. Guest cards only. */
   title?: string;
   dietary?: string;
   allergyNote?: string;
-  /** Table bookings can include extra graduates. The first student cannot be removed. */
   kind?: "student" | "guest";
 };
 
