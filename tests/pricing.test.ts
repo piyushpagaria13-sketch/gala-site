@@ -14,3 +14,8 @@ test("bookingTotal uses payable seats × SEAT_PRICE", () => {
   assert.equal(bookingTotal(4, 2), 2 * SEAT_PRICE);
   assert.equal(bookingTotal(2, 2), 0);
 });
+
+test("a table of 10 with two complimentary seats pays for 8", () => {
+  assert.equal(payableSeats(10, 2), 8);
+  assert.equal(bookingTotal(10, 2), 8 * SEAT_PRICE);
+});

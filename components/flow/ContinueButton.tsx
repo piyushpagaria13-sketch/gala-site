@@ -19,8 +19,8 @@ import {
     appendGuestCard,
     canAddGuestCard,
     isGuestRosterComplete,
+    padSeatGuests,
     padTableGuests,
-    startingGuestCards,
     TABLE_ROSTER_MESSAGE,
 } from "@/lib/guestRoster";
 import { matchStudent } from "@/lib/students";
@@ -54,19 +54,32 @@ export function HeaderTrailing() {
  * cards just above this bar.
  */
 export function ContinueDock() {
-  const { step, seatCountOpen, draft, setDraft } = useBookingDraft();
-  const showCta = step !== "pay" && step !== "done" && !seatCountOpen;
-  const startCount =
-    draft.type === "table" ? TABLE_CAPACITY : Math.min(2, draft.partySize ?? 2);
+  const { step, seatCountOpen, compModalOpen, draft, setDraft } =
+    useBookingDraft();
+  const showCta =
+    step !== "pay" &&
+    step !== "done" &&
+    !seatCountOpen &&
+    !compModalOpen;
+  const reserved =
+    draft.type === "table"
+      ? TABLE_CAPACITY
+      : Math.max(1, Math.min(draft.partySize ?? 1, TABLE_CAPACITY));
   const roster =
     draft.guests.length > 0
       ? draft.guests.slice(0, TABLE_CAPACITY)
-      : startingGuestCards(draft.student?.name ?? "", startCount);
+      : draft.type === "table"
+        ? padTableGuests(draft.guests, draft.student?.name ?? "")
+        : padSeatGuests(
+            draft.guests,
+            draft.student?.name ?? "",
+            reserved,
+          );
   const showAdd = step === "guests";
-  const addDisabled = !canAddGuestCard(roster);
+  const addDisabled = !canAddGuestCard(roster, reserved);
 
   const addCard = (kind: "student" | "guest") => {
-    const next = appendGuestCard(roster, kind);
+    const next = appendGuestCard(roster, kind, reserved);
     setDraft({
       ...draft,
       guests: next,
@@ -150,7 +163,7 @@ export function ContinueButton() {
       : draft.guests;
   const rosterReady =
     step === "guests" || step === "review"
-      ? isGuestRosterComplete(draft.type, rosterGuests)
+      ? isGuestRosterComplete(draft.type, rosterGuests, draft.partySize)
       : true;
 
   const handleClick = async () => {
@@ -184,7 +197,7 @@ export function ContinueButton() {
     }
 
     if (step === "guests") {
-      if (!isGuestRosterComplete(draft.type, rosterGuests)) return;
+      if (!isGuestRosterComplete(draft.type, rosterGuests, draft.partySize)) return;
       goNext();
       return;
     }
@@ -196,7 +209,7 @@ export function ContinueButton() {
 
     const studentId = draft.student?.id?.trim() || null;
     if (draft.tableNo == null) return;
-    if (!isGuestRosterComplete(draft.type, rosterGuests)) {
+    if (!isGuestRosterComplete(draft.type, rosterGuests, draft.partySize)) {
       setError(
         draft.type === "table"
           ? TABLE_ROSTER_MESSAGE

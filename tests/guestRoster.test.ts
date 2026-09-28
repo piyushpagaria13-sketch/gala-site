@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { padTableGuests, startingGuestCards, isGuestRosterComplete, duplicateStudentIndexes, trimTrailingBlankGuests, canAddGuestCard, appendGuestCard } from "../lib/guestRoster.ts";
+import { padTableGuests, padSeatGuests, startingGuestCards, isGuestRosterComplete, duplicateStudentIndexes, trimTrailingBlankGuests, canAddGuestCard, appendGuestCard } from "../lib/guestRoster.ts";
 
 test("a table booking is always 10 cards", () => {
   const empty = padTableGuests([], "Ada Tan");
@@ -91,6 +91,33 @@ test("starting cards never go below 1 or above 10", () => {
   assert.equal(startingGuestCards("Ada", 99).length, 10);
 });
 
+test("a seats booking keeps the chosen card count, not two", () => {
+  const three = padSeatGuests([], "Ada Tan", 3);
+  assert.equal(three.length, 3);
+  assert.equal(three[0]?.kind, "student");
+  assert.equal(canAddGuestCard(three, 3), false);
+  assert.equal(canAddGuestCard(three.slice(0, 2), 3), true);
+  const four = padSeatGuests(three, "Ada Tan", 4);
+  assert.equal(four.length, 4);
+  assert.equal(
+    isGuestRosterComplete(
+      "seats",
+      [
+        { name: "Ada Tan", kind: "student", dietary: "Chicken" },
+        {
+          name: "Pat Tan",
+          kind: "guest",
+          graduatingStudent: "Ada Tan",
+          title: "Others",
+          dietary: "Fish",
+        },
+      ],
+      3,
+    ),
+    false,
+  );
+});
+
 test("add stays disabled at 10 cards and enables after a deletion", () => {
   const ten = padTableGuests([], "Ada Tan");
   assert.equal(ten.length, 10);
@@ -152,4 +179,20 @@ test("two different students on two cards is allowed", () => {
   ];
   assert.deepEqual(duplicateStudentIndexes(two), []);
   assert.equal(isGuestRosterComplete("seats", two), true);
+});
+
+test("a two-seat booking is complete with two filled cards", () => {
+  const pair = [
+    { name: "Chanhong YAIM", kind: "student" as const, dietary: "Chicken" },
+    {
+      name: "Pat Tan",
+      kind: "guest" as const,
+      graduatingStudent: "Chanhong YAIM",
+      title: "Others",
+      dietary: "Fish",
+    },
+  ];
+  assert.equal(isGuestRosterComplete("seats", pair, 2), true);
+  assert.equal(isGuestRosterComplete("seats", pair.slice(0, 1), 2), false);
+  assert.equal(padSeatGuests([], "Chanhong YAIM", 2).length, 2);
 });

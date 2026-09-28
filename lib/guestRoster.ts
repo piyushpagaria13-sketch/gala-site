@@ -92,16 +92,50 @@ export function trimTrailingBlankGuests(
   return next;
 }
 
-export function canAddGuestCard(guests: Guest[]): boolean {
-  return guests.length < TABLE_CAPACITY;
+export function canAddGuestCard(
+  guests: Guest[],
+  cap = TABLE_CAPACITY,
+): boolean {
+  const limit = Math.max(1, Math.min(Math.floor(cap), TABLE_CAPACITY));
+  return guests.length < limit;
 }
 
 export function appendGuestCard(
   guests: Guest[],
   kind: "student" | "guest",
+  cap = TABLE_CAPACITY,
 ): Guest[] {
-  if (guests.length >= TABLE_CAPACITY) return guests;
+  const limit = Math.max(1, Math.min(Math.floor(cap), TABLE_CAPACITY));
+  if (guests.length >= limit) return guests;
   return [...guests, { name: "", kind }];
+}
+
+/**
+ * Seed a seats booking to the count chosen in "How many seats?".
+ */
+export function padSeatGuests(
+  existing: Guest[],
+  studentName: string,
+  count: number,
+): Guest[] {
+  const n = Math.max(1, Math.min(Math.floor(count) || 1, TABLE_CAPACITY));
+  const kept = existing.slice(0, n);
+  if (kept.length === 0) {
+    return startingGuestCards(studentName, n);
+  }
+  const next = kept.map((guest, i) =>
+    i === 0
+      ? {
+          ...guest,
+          kind: "student" as const,
+          name: guest.name.trim() || studentName,
+        }
+      : guest,
+  );
+  while (next.length < n) {
+    next.push({ name: "", kind: "guest" });
+  }
+  return next;
 }
 
 /**
@@ -144,13 +178,21 @@ export function isGuestComplete(guest: Guest): boolean {
   );
 }
 
-/** Table bookings need 10 complete cards. Seats bookings need every current card complete. Duplicate student names are never complete. */
+/** Table bookings need 10 complete cards. Seats bookings need every reserved card complete. Duplicate student names are never complete. */
 export function isGuestRosterComplete(
   type: "table" | "seats" | null,
   guests: Guest[],
+  reserved?: number | null,
 ): boolean {
   if (guests.length === 0 || !guests.every(isGuestComplete)) return false;
   if (duplicateStudentIndexes(guests).length > 0) return false;
   if (type === "table") return guests.length === TABLE_CAPACITY;
+  if (type === "seats") {
+    const need =
+      reserved != null && reserved > 0
+        ? Math.min(Math.floor(reserved), TABLE_CAPACITY)
+        : guests.length;
+    return guests.length === need;
+  }
   return true;
 }

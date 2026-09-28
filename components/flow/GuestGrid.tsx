@@ -9,9 +9,8 @@ import {
   DUPLICATE_STUDENT_MESSAGE,
   duplicateStudentIndexes,
   isGuestRosterComplete,
+  padSeatGuests,
   padTableGuests,
-  startingGuestCards,
-  trimTrailingBlankGuests,
 } from "@/lib/guestRoster";
 import type { Guest } from "@/lib/types";
 
@@ -22,56 +21,50 @@ function isStudent(guest: Guest, index: number): boolean {
 }
 
 /**
- * "Who's coming?" A table starts with 10 cards; Add student / Add guest stay
- * visible but disabled until a card is deleted. Seats start with two cards
- * and grow up to 10.
+ * "Who's coming?" A table starts with 10 cards. Seats start with the count
+ * chosen in "How many seats?" so a party of 3 or 4 is not collapsed to 2.
+ * Add student / Add guest stay visible but disabled at that cap until a
+ * card is deleted.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const isTable = draft.type === "table";
   const studentName = draft.student?.name ?? "";
-  const startCount = isTable ? TABLE_CAPACITY : Math.min(2, draft.partySize ?? 2);
-  const start = startingGuestCards(studentName, startCount);
+  const reserved = isTable
+    ? TABLE_CAPACITY
+    : Math.max(1, Math.min(draft.partySize ?? 1, TABLE_CAPACITY));
+  const start = isTable
+    ? padTableGuests(draft.guests, studentName)
+    : padSeatGuests(draft.guests, studentName, reserved);
+  const seededFor = useRef<string | null>(null);
+  const seedKey = isTable ? "table" : `seats:${reserved}`;
   const guests: Guest[] = (
-    draft.guests.length > 0 ? draft.guests : start
+    seededFor.current === seedKey ? draft.guests : start
   ).slice(0, TABLE_CAPACITY);
-  const seededTable = useRef(false);
 
   useLayoutEffect(() => {
-    if (!isTable) {
-      seededTable.current = false;
-      const trimmed = trimTrailingBlankGuests(
-        draft.guests.length > 0 ? draft.guests : start,
-        startCount,
-      );
-      if (draft.guests.length === trimmed.length) return;
-      setDraft({
-        ...draft,
-        guests: trimmed,
-        partySize: Math.max(draft.partySize ?? trimmed.length, trimmed.length),
-      });
-      return;
-    }
-    if (seededTable.current) return;
-    seededTable.current = true;
-    const next = padTableGuests(draft.guests, studentName);
+    if (seededFor.current === seedKey) return;
+    seededFor.current = seedKey;
+    const next = isTable
+      ? padTableGuests(draft.guests, studentName)
+      : padSeatGuests(draft.guests, studentName, reserved);
     if (
-      draft.guests.length === TABLE_CAPACITY &&
-      draft.partySize === TABLE_CAPACITY
+      draft.guests.length === next.length &&
+      draft.partySize === (isTable ? TABLE_CAPACITY : reserved)
     ) {
       return;
     }
     setDraft({
       ...draft,
       guests: next,
-      partySize: TABLE_CAPACITY,
+      partySize: isTable ? TABLE_CAPACITY : reserved,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTable]);
+  }, [seedKey]);
 
   useEffect(() => {
-    setStepValid(isGuestRosterComplete(draft.type, guests));
-  }, [draft.type, guests, setStepValid]);
+    setStepValid(isGuestRosterComplete(draft.type, guests, draft.partySize));
+  }, [draft.type, guests, draft.partySize, setStepValid]);
 
   const commit = (next: Guest[]) => {
     const clipped = next.slice(0, TABLE_CAPACITY);

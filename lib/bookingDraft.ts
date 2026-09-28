@@ -119,12 +119,13 @@ export function maxPartySize(draft: BookingDraft): number {
   return TABLE_CAPACITY;
 }
 
-/** Seats in this booking — guest cards on the seats path, capped at the reserved count. */
+/** Seats in this booking — the count chosen in the modal, or more if cards were added. */
 export function partySeatCount(draft: BookingDraft): number {
   if (draft.type === "table") return TABLE_CAPACITY;
-  const cap = maxPartySize(draft);
-  if (draft.guests.length > 0) return Math.min(draft.guests.length, cap);
-  return Math.min(draft.partySize ?? 1, cap);
+  const reserved = draft.partySize;
+  const cards = draft.guests.length;
+  const n = Math.max(reserved && reserved > 0 ? reserved : 0, cards, 1);
+  return Math.min(n, TABLE_CAPACITY);
 }
 
 function guestsForStep(draft: BookingDraft): Guest[] {
@@ -145,9 +146,17 @@ function isStepComplete(step: BookingStep, draft: BookingDraft): boolean {
     case "table":
       return draft.tableNo !== null;
     case "guests":
-      return isGuestRosterComplete(draft.type, guestsForStep(draft));
+      return isGuestRosterComplete(
+        draft.type,
+        guestsForStep(draft),
+        draft.partySize,
+      );
     case "review":
-      return isGuestRosterComplete(draft.type, guestsForStep(draft));
+      return isGuestRosterComplete(
+        draft.type,
+        guestsForStep(draft),
+        draft.partySize,
+      );
     case "pay":
       // No header CTA on the pay screen — "I've paid" lives in the content.
       return false;
@@ -195,7 +204,11 @@ export function BookingDraftProvider({ children }: { children: ReactNode }) {
         }
         if (
           step === "guests" &&
-          !isGuestRosterComplete(draft.type, guestsForStep(draft))
+          !isGuestRosterComplete(
+            draft.type,
+            guestsForStep(draft),
+            draft.partySize,
+          )
         ) {
           setStepValid(false);
           return;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useBookingDraft } from "@/lib/bookingDraft";
+import { padSeatGuests } from "@/lib/guestRoster";
 
 /**
  * "How many seats?" — Figma frame "D2c · Seat count modal (dark)" (253:85).
@@ -19,7 +20,15 @@ export function SeatCountModal() {
 
   const handleConfirm = () => {
     if (count === null) return;
-    setDraft({ ...draft, partySize: count });
+    setDraft({
+      ...draft,
+      partySize: count,
+      guests: padSeatGuests(
+        draft.guests,
+        draft.student?.name ?? "",
+        count,
+      ),
+    });
     setSeatCountOpen(false);
     goToStep("table");
   };
