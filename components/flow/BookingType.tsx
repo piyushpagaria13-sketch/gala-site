@@ -4,7 +4,7 @@ import Image from "next/image";
 import { SeatCountModal } from "@/components/flow/SeatCountModal";
 import { useBookingDraft, type BookingKind } from "@/lib/bookingDraft";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
-import { startingGuestCards } from "@/lib/guestRoster";
+import { padTableGuests } from "@/lib/guestRoster";
 
 /**
  * Step 2 — booking type. Figma frames "D2a · Booking type — none (dark)"
@@ -43,10 +43,10 @@ export function BookingType() {
         ...draft,
         type: "table",
         partySize: TABLE_CAPACITY,
-        guests:
-          draft.guests.length > 0
-            ? draft.guests.slice(0, TABLE_CAPACITY)
-            : startingGuestCards(draft.student?.name ?? "", 2),
+        guests: padTableGuests(
+          draft.guests,
+          draft.student?.name ?? "",
+        ),
       });
     } else {
       setDraft({

@@ -38,9 +38,9 @@ export default function BookLayout({
             <HeaderTrailing />
           </header>
 
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 overflow-auto">
-              <div className="flex min-h-full flex-col items-center pb-10">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+              <div className="flex flex-col items-center pb-10">
                 {children}
               </div>
             </div>

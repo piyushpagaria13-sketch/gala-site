@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { GuestCard } from "@/components/flow/GuestCard";
 import { useBookingDraft } from "@/lib/bookingDraft";
 import { CLASS_NAMES } from "@/lib/classList";
@@ -9,6 +9,7 @@ import {
   DUPLICATE_STUDENT_MESSAGE,
   duplicateStudentIndexes,
   isGuestRosterComplete,
+  padTableGuests,
   startingGuestCards,
   trimTrailingBlankGuests,
 } from "@/lib/guestRoster";
@@ -21,37 +22,49 @@ function isStudent(guest: Guest, index: number): boolean {
 }
 
 /**
- * "Who's coming?" Starts with a student and a guest. Add student / Add guest
- * (in the Continue dock) grow the roster up to 10. A table still cannot
- * continue until all 10 cards are filled.
+ * "Who's coming?" A table starts with 10 cards; Add student / Add guest stay
+ * visible but disabled until a card is deleted. Seats start with two cards
+ * and grow up to 10.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const isTable = draft.type === "table";
   const studentName = draft.student?.name ?? "";
-  const startCount = isTable ? 2 : Math.min(2, draft.partySize ?? 2);
+  const startCount = isTable ? TABLE_CAPACITY : Math.min(2, draft.partySize ?? 2);
   const start = startingGuestCards(studentName, startCount);
   const guests: Guest[] = (
     draft.guests.length > 0 ? draft.guests : start
   ).slice(0, TABLE_CAPACITY);
+  const seededTable = useRef(false);
 
   useLayoutEffect(() => {
-    const trimmed = trimTrailingBlankGuests(
-      draft.guests.length > 0 ? draft.guests : start,
-      startCount,
-    );
+    if (!isTable) {
+      seededTable.current = false;
+      const trimmed = trimTrailingBlankGuests(
+        draft.guests.length > 0 ? draft.guests : start,
+        startCount,
+      );
+      if (draft.guests.length === trimmed.length) return;
+      setDraft({
+        ...draft,
+        guests: trimmed,
+        partySize: Math.max(draft.partySize ?? trimmed.length, trimmed.length),
+      });
+      return;
+    }
+    if (seededTable.current) return;
+    seededTable.current = true;
+    const next = padTableGuests(draft.guests, studentName);
     if (
-      draft.guests.length === trimmed.length &&
-      (!isTable || draft.partySize === TABLE_CAPACITY)
+      draft.guests.length === TABLE_CAPACITY &&
+      draft.partySize === TABLE_CAPACITY
     ) {
       return;
     }
     setDraft({
       ...draft,
-      guests: trimmed,
-      partySize: isTable
-        ? TABLE_CAPACITY
-        : Math.max(draft.partySize ?? trimmed.length, trimmed.length),
+      guests: next,
+      partySize: TABLE_CAPACITY,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTable]);

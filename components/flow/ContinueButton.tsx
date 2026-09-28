@@ -57,12 +57,13 @@ export function ContinueDock() {
   const { step, seatCountOpen, draft, setDraft } = useBookingDraft();
   const showCta = step !== "pay" && step !== "done" && !seatCountOpen;
   const startCount =
-    draft.type === "table" ? 2 : Math.min(2, draft.partySize ?? 2);
+    draft.type === "table" ? TABLE_CAPACITY : Math.min(2, draft.partySize ?? 2);
   const roster =
     draft.guests.length > 0
       ? draft.guests.slice(0, TABLE_CAPACITY)
       : startingGuestCards(draft.student?.name ?? "", startCount);
-  const showAdd = step === "guests" && canAddGuestCard(roster);
+  const showAdd = step === "guests";
+  const addDisabled = !canAddGuestCard(roster);
 
   const addCard = (kind: "student" | "guest") => {
     const next = appendGuestCard(roster, kind);
@@ -93,8 +94,16 @@ export function ContinueDock() {
       >
         {showAdd && (
           <div className="mx-auto mb-3 grid w-full max-w-[612px] grid-cols-2 gap-4">
-            <AddGuestCard label="Add student" onAdd={() => addCard("student")} />
-            <AddGuestCard label="Add guest" onAdd={() => addCard("guest")} />
+            <AddGuestCard
+              label="Add student"
+              disabled={addDisabled}
+              onAdd={() => addCard("student")}
+            />
+            <AddGuestCard
+              label="Add guest"
+              disabled={addDisabled}
+              onAdd={() => addCard("guest")}
+            />
           </div>
         )}
         {showCta && (

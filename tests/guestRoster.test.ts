@@ -91,6 +91,14 @@ test("starting cards never go below 1 or above 10", () => {
   assert.equal(startingGuestCards("Ada", 99).length, 10);
 });
 
+test("add stays disabled at 10 cards and enables after a deletion", () => {
+  const ten = padTableGuests([], "Ada Tan");
+  assert.equal(ten.length, 10);
+  assert.equal(canAddGuestCard(ten), false);
+  assert.equal(canAddGuestCard(ten.slice(0, 9)), true);
+  assert.equal(appendGuestCard(ten.slice(0, 9), "student").length, 10);
+});
+
 test("trailing blank cards are trimmed so add stays available", () => {
   const trimmed = trimTrailingBlankGuests(
     [
