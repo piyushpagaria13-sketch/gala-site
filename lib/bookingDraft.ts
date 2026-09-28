@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { Guest, Student, BookingStatus } from "./types";
 import { TABLE_CAPACITY } from "./floorplan";
+import { isValidSingaporePhone } from "./phone";
 
 export type BookingKind = "seats" | "table";
 
@@ -126,7 +127,7 @@ function isStepComplete(step: BookingStep, draft: BookingDraft): boolean {
   switch (step) {
     case "student":
       return Boolean(
-        draft.student?.name.trim() && draft.contact?.phone?.trim(),
+        draft.student?.name.trim() && isValidSingaporePhone(draft.contact?.phone),
       );
     case "type":
       return draft.type !== null;

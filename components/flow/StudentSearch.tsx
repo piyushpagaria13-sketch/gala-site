@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useBookingDraft } from "@/lib/bookingDraft";
+import { isValidSingaporePhone, singaporePhoneTooLong } from "@/lib/phone";
 import { sameStudentName, searchStudents } from "@/lib/students";
 import type { Student } from "@/lib/types";
 
@@ -18,8 +19,10 @@ export function StudentSearch() {
   const [open, setOpen] = useState(false);
   const requestId = useRef(0);
 
+  const phoneTooLong = singaporePhoneTooLong(phone);
+
   useEffect(() => {
-    setStepValid(Boolean(name.trim() && phone.trim()));
+    setStepValid(Boolean(name.trim() && isValidSingaporePhone(phone)));
   }, [name, phone, setStepValid]);
 
   useEffect(() => {
@@ -165,12 +168,24 @@ export function StudentSearch() {
           id="student-phone"
           type="tel"
           required
+          inputMode="numeric"
           value={phone}
           onChange={(e) => handlePhoneChange(e.target.value)}
           placeholder="+65"
           autoComplete="tel"
-          className="w-full rounded-[12px] border border-[#6e5a2b] bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] focus:border-gold"
+          aria-invalid={phoneTooLong}
+          aria-describedby={phoneTooLong ? "student-phone-error" : undefined}
+          className={`w-full rounded-[12px] border bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] ${
+            phoneTooLong
+              ? "border-[#e0937d] focus:border-[#e0937d]"
+              : "border-[#6e5a2b] focus:border-gold"
+          }`}
         />
+        {phoneTooLong && (
+          <p id="student-phone-error" className="text-[13px] leading-[1.5] text-[#e0937d]">
+            Singapore numbers are 8 digits.
+          </p>
+        )}
         <p className="text-[13px] leading-[1.5] text-[#77633a]">
           Bookings are made under the graduating student&apos;s name.
         </p>
