@@ -29,3 +29,9 @@ export const COMP_MODAL_COPY = {
   title: "Complimentary seats included",
   body: "This student's booking includes complimentary tickets, courtesy of the PA.",
 };
+
+/**
+ * When true, each ticket plaque reads "TABLE {n} · SEAT {i}".
+ * Default is Option A: table only, one page per guest name.
+ */
+export const SEAT_NUMBERS_ON_TICKETS = false;

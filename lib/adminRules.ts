@@ -144,7 +144,7 @@ export function cancellationText(booking: AdminBooking): string {
   return lines.join("\n");
 }
 
-export function ticketHtml(booking: AdminBooking, qrDataUrl: string): string {
+export function ticketHtml(booking: AdminBooking): string {
   const names = booking.guests
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -161,7 +161,7 @@ export function ticketHtml(booking: AdminBooking, qrDataUrl: string): string {
     <p>Table ${booking.tableNo}</p>
     <p>${names}</p>
     <p>Saturday 22 May 2027 · Fairmont Ballroom, Raffles City</p>
-    <img alt="QR code for ${booking.ref}" src="${qrDataUrl}" width="220" height="220" style="background:#fff;padding:8px;border-radius:12px;" />
+    <p>Your tickets are attached as a PDF — one page per guest.</p>
   </div>
 </body>
 </html>`;

@@ -10,6 +10,7 @@ import {
   runCancel,
   runConfirm,
   seatsFilled,
+  ticketHtml,
   type AdminBooking,
 } from "../lib/adminRules.ts";
 
@@ -178,6 +179,15 @@ test("buttons follow status and cancelled rows are dimmed", () => {
     dimmed: true,
   });
   assert.equal(cancelCopy(booking()).refundNote, null);
+});
+
+test("ticket email points to the attached PDF and does not embed a QR", () => {
+  const html = ticketHtml(booking());
+  assert.match(html, /GALA-0235/);
+  assert.match(html, /Table 12/);
+  assert.match(html, /attached as a PDF/);
+  assert.doesNotMatch(html, /<img/i);
+  assert.doesNotMatch(html, /QR code/i);
 });
 
 test("reminder email names the deadline and the screenshot reply", () => {

@@ -1,11 +1,12 @@
-import QRCode from "qrcode";
 import {
   emailFooterHtml,
   emailFooterText,
   PA_CONTACT_EMAIL,
   REMINDER_DEADLINE_HOURS,
+  SEAT_NUMBERS_ON_TICKETS,
   SENDER_ADDRESS,
 } from "@/lib/config";
+import { buildTicketPdf, ticketPdfFilename } from "@/lib/ticketPdf";
 import {
   cancellationText,
   reminderText,
@@ -31,6 +32,7 @@ async function sendResend(input: {
   subject: string;
   html: string;
   text: string;
+  attachments?: { filename: string; content: string; content_type?: string }[];
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("Email isn't set up yet");
@@ -48,6 +50,7 @@ async function sendResend(input: {
       subject: input.subject,
       html: body.html,
       text: body.text,
+      attachments: input.attachments,
     }),
   });
   if (!response.ok) {
@@ -57,13 +60,26 @@ async function sendResend(input: {
 }
 
 export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
-  const qr = await QRCode.toDataURL(booking.ref, { margin: 1, width: 240 });
-  const html = ticketHtml(booking, qr);
+  const html = ticketHtml(booking);
+  const pdf = await buildTicketPdf({
+    ref: booking.ref,
+    tableNo: booking.tableNo,
+    partySize: booking.partySize,
+    guests: booking.guests,
+    seatNumbers: SEAT_NUMBERS_ON_TICKETS,
+  });
   await sendResend({
     to: booking.email,
     subject: `Your gala ticket ${booking.ref}`,
     html,
-    text: `Your ticket ${booking.ref}. Table ${booking.tableNo}. Saturday 22 May 2027 · Fairmont Ballroom, Raffles City.`,
+    text: `Your ticket ${booking.ref}. Table ${booking.tableNo}. Saturday 22 May 2027 · Fairmont Ballroom, Raffles City. Tickets are attached as a PDF.`,
+    attachments: [
+      {
+        filename: ticketPdfFilename(booking.ref),
+        content: Buffer.from(pdf).toString("base64"),
+        content_type: "application/pdf",
+      },
+    ],
   });
 }
 
