@@ -21,10 +21,10 @@ function isStudent(guest: Guest, index: number): boolean {
 }
 
 /**
- * "Who's coming?" A table starts with 10 cards. Seats start with the count
- * chosen in "How many seats?" so a party of 3 or 4 is not collapsed to 2.
- * Add student / Add guest stay visible but disabled at that cap until a
- * card is deleted.
+ * "Who's coming?" A table starts with 10 cards; Add student / Add guest
+ * stay visible but disabled until a card is deleted. Seats start with the
+ * count chosen in "How many seats?", hide Add student, and keep Add guest
+ * enabled so extra guests can join.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
@@ -72,9 +72,7 @@ export function GuestGrid() {
     setDraft({
       ...draft,
       guests: clipped,
-      partySize: isTable
-        ? TABLE_CAPACITY
-        : Math.max(draft.partySize ?? size, size),
+      partySize: isTable ? TABLE_CAPACITY : size,
       cars: Math.min(draft.cars, size),
       busSeats: Math.min(draft.busSeats, size),
     });

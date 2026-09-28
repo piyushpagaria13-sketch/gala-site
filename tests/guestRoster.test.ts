@@ -95,8 +95,9 @@ test("a seats booking keeps the chosen card count, not two", () => {
   const three = padSeatGuests([], "Ada Tan", 3);
   assert.equal(three.length, 3);
   assert.equal(three[0]?.kind, "student");
-  assert.equal(canAddGuestCard(three, 3), false);
-  assert.equal(canAddGuestCard(three.slice(0, 2), 3), true);
+  assert.equal(canAddGuestCard(three), true);
+  assert.equal(appendGuestCard(three, "guest").length, 4);
+  assert.equal(appendGuestCard(three, "guest")[3]?.kind, "guest");
   const four = padSeatGuests(three, "Ada Tan", 4);
   assert.equal(four.length, 4);
   assert.equal(
@@ -116,6 +117,15 @@ test("a seats booking keeps the chosen card count, not two", () => {
     ),
     false,
   );
+});
+
+test("a seats booking can add guests up to 10", () => {
+  const nine = padSeatGuests([], "Ada Tan", 9);
+  assert.equal(canAddGuestCard(nine), true);
+  assert.equal(appendGuestCard(nine, "guest").length, 10);
+  const ten = padSeatGuests([], "Ada Tan", 10);
+  assert.equal(canAddGuestCard(ten), false);
+  assert.equal(appendGuestCard(ten, "guest").length, 10);
 });
 
 test("add stays disabled at 10 cards and enables after a deletion", () => {

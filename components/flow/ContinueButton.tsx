@@ -76,17 +76,16 @@ export function ContinueDock() {
             reserved,
           );
   const showAdd = step === "guests";
-  const addDisabled = !canAddGuestCard(roster, reserved);
+  const isTable = draft.type === "table";
+  const addDisabled = !canAddGuestCard(roster);
+  const showAddStudent = showAdd && isTable;
 
   const addCard = (kind: "student" | "guest") => {
-    const next = appendGuestCard(roster, kind, reserved);
+    const next = appendGuestCard(roster, kind);
     setDraft({
       ...draft,
       guests: next,
-      partySize:
-        draft.type === "table"
-          ? TABLE_CAPACITY
-          : Math.max(draft.partySize ?? next.length, next.length),
+      partySize: isTable ? TABLE_CAPACITY : next.length,
     });
   };
 
@@ -106,12 +105,18 @@ export function ContinueDock() {
         }
       >
         {showAdd && (
-          <div className="mx-auto mb-3 grid w-full max-w-[612px] grid-cols-2 gap-4">
-            <AddGuestCard
-              label="Add student"
-              disabled={addDisabled}
-              onAdd={() => addCard("student")}
-            />
+          <div
+            className={`mx-auto mb-3 grid w-full max-w-[612px] gap-4 ${
+              showAddStudent ? "grid-cols-2" : "grid-cols-1"
+            }`}
+          >
+            {showAddStudent && (
+              <AddGuestCard
+                label="Add student"
+                disabled={addDisabled}
+                onAdd={() => addCard("student")}
+              />
+            )}
             <AddGuestCard
               label="Add guest"
               disabled={addDisabled}
