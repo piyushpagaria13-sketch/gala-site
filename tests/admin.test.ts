@@ -172,7 +172,7 @@ test("buttons follow status and cancelled rows are dimmed", () => {
   assert.deepEqual(buttonState("paid"), {
     confirm: false,
     remind: false,
-    cancel: true,
+    cancel: false,
     dimmed: false,
   });
   assert.deepEqual(buttonState("cancelled"), {

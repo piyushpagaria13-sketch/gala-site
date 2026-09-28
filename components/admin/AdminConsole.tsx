@@ -243,7 +243,9 @@ export function AdminConsole({
                       }
                       className="rounded-pill bg-[#d4af37] px-3 py-1.5 text-[13px] font-semibold text-[#241a06] disabled:opacity-35"
                     >
-                      Confirm & send ticket
+                      {booking.status === "paid"
+                        ? "Confirmed & sent"
+                        : "Confirm & send ticket"}
                     </button>
                     <button
                       type="button"

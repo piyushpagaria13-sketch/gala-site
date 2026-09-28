@@ -49,7 +49,7 @@ export function buttonState(status: AdminStatus): ButtonState {
     return { confirm: false, remind: false, cancel: false, dimmed: true };
   }
   if (status === "paid") {
-    return { confirm: false, remind: false, cancel: true, dimmed: false };
+    return { confirm: false, remind: false, cancel: false, dimmed: false };
   }
   return { confirm: true, remind: true, cancel: true, dimmed: false };
 }
