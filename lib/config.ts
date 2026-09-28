@@ -2,7 +2,7 @@
  * Hours named in the payment-reminder email. There is no auto-cancel job
  * yet; change this when that window is decided.
  */
-export const REMINDER_DEADLINE_HOURS = 48;
+export const REMINDER_DEADLINE_HOURS = 12;
 
 /** From header for every Resend message. Domain galauwcseadover.com is verified. */
 export const SENDER_ADDRESS =

@@ -2,28 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useBookingDraft } from "@/lib/bookingDraft";
+import { emailLooksInvalid, isValidEmail } from "@/lib/email";
 import { isValidSingaporePhone, singaporePhoneTooLong } from "@/lib/phone";
 import { sameStudentName, searchStudents } from "@/lib/students";
 import type { Student } from "@/lib/types";
 
 /**
  * Step 1 — student name. Suggestions come from the class list as you type.
- * Continue stays on once name and phone are filled. An exact match is
+ * Continue stays on once name, phone, and email are filled. An exact match is
  * resolved on Continue.
  */
 export function StudentSearch() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const [name, setName] = useState(draft.student?.name ?? "");
   const [phone, setPhone] = useState(draft.contact?.phone ?? "");
+  const [email, setEmail] = useState(draft.contact?.email ?? "");
   const [matches, setMatches] = useState<Student[]>([]);
   const [open, setOpen] = useState(false);
   const requestId = useRef(0);
 
   const phoneTooLong = singaporePhoneTooLong(phone);
+  const emailInvalid = emailLooksInvalid(email);
 
   useEffect(() => {
-    setStepValid(Boolean(name.trim() && isValidSingaporePhone(phone)));
-  }, [name, phone, setStepValid]);
+    setStepValid(
+      Boolean(
+        name.trim() && isValidSingaporePhone(phone) && isValidEmail(email),
+      ),
+    );
+  }, [name, phone, email, setStepValid]);
 
   useEffect(() => {
     const trimmed = name.trim();
@@ -73,7 +80,7 @@ export function StudentSearch() {
           ? { ...draft.student!, name: trimmed }
           : { id: "", name: trimmed, compSeats: 0 }
         : null,
-      contact: { ...draft.contact, phone },
+      contact: { ...draft.contact, phone, email },
     });
   };
 
@@ -82,7 +89,7 @@ export function StudentSearch() {
     setDraft({
       ...draft,
       student,
-      contact: { ...draft.contact, phone },
+      contact: { ...draft.contact, phone, email },
     });
     setMatches([]);
     setOpen(false);
@@ -95,7 +102,18 @@ export function StudentSearch() {
       student: name.trim()
         ? { ...(draft.student ?? { id: "", compSeats: 0 }), name: name.trim() }
         : draft.student,
-      contact: { ...draft.contact, phone: value },
+      contact: { ...draft.contact, phone: value, email },
+    });
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setDraft({
+      ...draft,
+      student: name.trim()
+        ? { ...(draft.student ?? { id: "", compSeats: 0 }), name: name.trim() }
+        : draft.student,
+      contact: { ...draft.contact, phone, email: value },
     });
   };
 
@@ -184,6 +202,33 @@ export function StudentSearch() {
         {phoneTooLong && (
           <p id="student-phone-error" className="text-[13px] leading-[1.5] text-[#e0937d]">
             Singapore numbers are 8 digits.
+          </p>
+        )}
+      </div>
+
+      <div className="relative mt-5 flex w-full flex-col gap-2">
+        <label htmlFor="student-email" className="text-[13px] text-[#9a7f3e]">
+          Add Email
+        </label>
+        <input
+          id="student-email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => handleEmailChange(e.target.value)}
+          placeholder="you@email.com"
+          autoComplete="email"
+          aria-invalid={emailInvalid}
+          aria-describedby={emailInvalid ? "student-email-error" : undefined}
+          className={`w-full rounded-[12px] border bg-[#1a1610] px-[18px] py-4 text-[17px] text-[#e3c46a] outline-none placeholder:text-[#77633a] ${
+            emailInvalid
+              ? "border-[#e0937d] focus:border-[#e0937d]"
+              : "border-[#6e5a2b] focus:border-gold"
+          }`}
+        />
+        {emailInvalid && (
+          <p id="student-email-error" className="text-[13px] leading-[1.5] text-[#e0937d]">
+            Enter a valid email.
           </p>
         )}
         <p className="text-[13px] leading-[1.5] text-[#77633a]">

@@ -5,6 +5,7 @@ import {
   REFUND_NOTE,
   buttonState,
   cancelCopy,
+  cancellationText,
   planConfirm,
   reminderText,
   runCancel,
@@ -190,10 +191,19 @@ test("ticket email points to the attached PDF and does not embed a QR", () => {
   assert.doesNotMatch(html, /QR code/i);
 });
 
-test("reminder email names the deadline and the screenshot reply", () => {
-  const text = reminderText(booking(), 48);
-  assert.match(text, /GALA-0235/);
-  assert.match(text, /Table 12/);
-  assert.match(text, /within 48 hours/);
-  assert.match(text, /Already paid\? Reply with a screenshot/);
+test("reminder email uses the 12-hour outstanding-payment copy", () => {
+  const text = reminderText();
+  assert.match(text, /has NOT been confirmed yet/);
+  assert.match(text, /next 12 hours/);
+  assert.match(text, /\+6598193518/);
+  assert.match(text, /padovergraduation@gapps\.uwcsea\.edu\.sg/i);
+  assert.match(text, /Grade Reps/);
+});
+
+test("cancellation email says the seats are released", () => {
+  const text = cancellationText();
+  assert.equal(
+    text,
+    "Your booking has been cancelled and the seats have been released for booking again!",
+  );
 });

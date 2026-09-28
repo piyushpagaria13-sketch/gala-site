@@ -123,25 +123,16 @@ export function planRemind(
   return { type: "send" };
 }
 
-export function reminderText(booking: AdminBooking, hours: number): string {
+export function reminderText(_booking?: AdminBooking, _hours?: number): string {
   return [
-    `We haven't been able to match a payment for ${booking.ref} yet. To keep your seats at Table ${booking.tableNo}, please complete payment within ${hours} hours.`,
+    "Your payment is still outstanding and your booking has NOT been confirmed yet. We will hold your tickets for next 12 hours before cancelling the reservation.",
     "",
-    `PayNow reference: ${booking.ref}`,
-    `Amount: S$${booking.amount}`,
-    "Share a screenshot of the transfer on +6598193518.",
-    "",
-    "Already paid? Reply with a screenshot and we'll sort it out.",
+    "If you have already paid and shared your screenshot for the proof of payment on +6598193518, please reach out to us on padovergraduation@gapps.uwcsea.edu.sg or contact your Grade Reps directly.",
   ].join("\n");
 }
 
-export function cancellationText(booking: AdminBooking): string {
-  const lines = [
-    `${booking.ref} has been cancelled.`,
-    `The ${booking.partySize} seats at Table ${booking.tableNo} have been released and are available for other families to book.`,
-  ];
-  if (booking.status === "paid") lines.push("", REFUND_NOTE);
-  return lines.join("\n");
+export function cancellationText(_booking?: AdminBooking): string {
+  return "Your booking has been cancelled and the seats have been released for booking again!";
 }
 
 export function ticketHtml(booking: AdminBooking): string {

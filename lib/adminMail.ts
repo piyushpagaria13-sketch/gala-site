@@ -2,7 +2,6 @@ import {
   emailFooterHtml,
   emailFooterText,
   PA_CONTACT_EMAIL,
-  REMINDER_DEADLINE_HOURS,
   SEAT_NUMBERS_ON_TICKETS,
   SENDER_ADDRESS,
 } from "@/lib/config";
@@ -84,7 +83,7 @@ export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
 }
 
 export async function sendReminderEmail(booking: AdminBooking): Promise<void> {
-  const text = reminderText(booking, REMINDER_DEADLINE_HOURS);
+  const text = reminderText();
   await sendResend({
     to: booking.email,
     subject: `Payment reminder ${booking.ref}`,
@@ -94,7 +93,7 @@ export async function sendReminderEmail(booking: AdminBooking): Promise<void> {
 }
 
 export async function sendCancellationEmail(booking: AdminBooking): Promise<void> {
-  const text = cancellationText(booking);
+  const text = cancellationText();
   await sendResend({
     to: booking.email,
     subject: `Booking cancelled ${booking.ref}`,
