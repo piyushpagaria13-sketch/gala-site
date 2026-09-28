@@ -12,6 +12,8 @@ import {
   runConfirm,
   seatsFilled,
   ticketHtml,
+  ticketSubject,
+  ticketSummaryLine,
   type AdminBooking,
 } from "../lib/adminRules.ts";
 
@@ -182,13 +184,36 @@ test("buttons follow status and cancelled rows are dimmed", () => {
   assert.equal(cancelCopy(booking()).refundNote, null);
 });
 
-test("ticket email points to the attached PDF and does not embed a QR", () => {
-  const html = ticketHtml(booking());
-  assert.match(html, /GALA-0235/);
-  assert.match(html, /Table 12/);
-  assert.match(html, /attached as a PDF/);
-  assert.doesNotMatch(html, /<img/i);
+test("ticket email is the UWCSEA table layout with the logo and no QR", () => {
+  const row = booking();
+  const html = ticketHtml(row);
+  assert.equal(
+    ticketSubject(row),
+    "Your tickets — GALA-0235 · UWCSEA Dover Graduation Gala",
+  );
+  assert.equal(
+    ticketSummaryLine(row),
+    "GALA-0235 · Table 12 · 3 seats · Saturday, 22 May 2027 · Fairmont Ballroom, Raffles City",
+  );
+  assert.match(html, /<table/i);
+  assert.match(html, /#101d33/);
+  assert.match(html, /Dear Aryan Tan,/);
+  assert.match(
+    html,
+    /Your booking is confirmed\. Your E-Tickets are attached to this email\./,
+  );
+  assert.match(
+    html,
+    /GALA-0235 · Table 12 · 3 seats · Saturday, 22 May 2027 · Fairmont Ballroom, Raffles City/,
+  );
+  assert.match(html, /https:\/\/galadinneruwcseadover\.com\/uwcsea-logo\.png/);
+  assert.match(html, /alt="UWCSEA"/);
+  assert.match(html, /isn't monitored/);
+  assert.match(html, /mailto:Padovergraduation@gapps\.uwcsea\.edu\.sg/i);
   assert.doesNotMatch(html, /QR code/i);
+  assert.doesNotMatch(html, /<button/i);
+  assert.doesNotMatch(html, /supabase/i);
+  assert.doesNotMatch(html, /href="https?:\/\//i);
 });
 
 test("reminder email uses the 12-hour outstanding-payment copy", () => {

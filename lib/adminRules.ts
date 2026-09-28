@@ -135,25 +135,84 @@ export function cancellationText(_booking?: AdminBooking): string {
   return "Your booking has been cancelled and the seats have been released for booking again!";
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+/** Hosted logo on the live site. Matches lib/config UWCSEA_LOGO_URL. */
+export const TICKET_LOGO_URL =
+  "https://galadinneruwcseadover.com/uwcsea-logo.png";
+
+const TICKET_FOOTER_MAIL = "Padovergraduation@gapps.uwcsea.edu.sg";
+
+function ticketFooterHtml(): string {
+  return `<p style="margin-top:28px;font-size:13px;line-height:1.5;color:#9a7f3e;">This mailbox isn't monitored — for any questions about your booking, email us at <a href="mailto:${TICKET_FOOTER_MAIL}" style="color:#d4af37;">${TICKET_FOOTER_MAIL}</a> or speak to your Grade Rep.</p>`;
+}
+
+export function ticketSubject(booking: AdminBooking): string {
+  return `Your tickets — ${booking.ref} · UWCSEA Dover Graduation Gala`;
+}
+
+export function ticketSummaryLine(booking: AdminBooking): string {
+  return `${booking.ref} · Table ${booking.tableNo} · ${booking.partySize} seats · Saturday, 22 May 2027 · Fairmont Ballroom, Raffles City`;
+}
+
+export function ticketText(booking: AdminBooking): string {
+  const name = booking.studentName.trim() || "Guest";
+  return [
+    `Dear ${name},`,
+    "",
+    "Your booking is confirmed. Your E-Tickets are attached to this email.",
+    "",
+    ticketSummaryLine(booking),
+  ].join("\n");
+}
+
 export function ticketHtml(booking: AdminBooking): string {
-  const names = booking.guests
-    .slice()
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((guest) => guest.name)
-    .filter(Boolean)
-    .join(", ");
-  return `<!doctype html>
-<html>
-<body style="margin:0;background:#0b1526;color:#e8d9a8;font-family:Georgia,serif;">
-  <div style="max-width:520px;margin:0 auto;padding:32px 24px;">
-    <p style="letter-spacing:2px;font-size:12px;color:#d4af37;">UWCSEA DOVER · CLASS OF 2027</p>
-    <h1 style="color:#d4af37;font-weight:500;">Your gala ticket</h1>
-    <p style="font-size:18px;color:#e3c46a;">${booking.ref}</p>
-    <p>Table ${booking.tableNo}</p>
-    <p>${names}</p>
-    <p>Saturday 22 May 2027 · Fairmont Ballroom, Raffles City</p>
-    <p>Your tickets are attached as a PDF — one page per guest.</p>
-  </div>
+  const name = escapeHtml(booking.studentName.trim() || "Guest");
+  const summary = escapeHtml(ticketSummaryLine(booking));
+  const footer = ticketFooterHtml();
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(ticketSubject(booking))}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#ffffff;">
+    <tr>
+      <td align="center" style="padding:0;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:600px;max-width:600px;">
+          <tr>
+            <td align="center" bgcolor="#ffffff" style="background-color:#ffffff;padding:28px 32px 24px 32px;">
+              <img src="${TICKET_LOGO_URL}" alt="UWCSEA" width="200" height="120" style="display:block;border:0;outline:none;text-decoration:none;width:200px;height:120px;" />
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#101d33" style="background-color:#101d33;padding:28px 32px;">
+              <p style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:1.4;font-weight:bold;color:#ffffff;">Dear ${name},</p>
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;font-weight:normal;color:#ffffff;">Your booking is confirmed. Your E-Tickets are attached to this email.</p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f4f1ea" style="background-color:#f4f1ea;padding:20px 32px 8px 32px;">
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#4a4338;">${summary}</p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f4f1ea" style="background-color:#f4f1ea;padding:8px 32px 28px 32px;font-family:Arial,Helvetica,sans-serif;">
+              ${footer}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }

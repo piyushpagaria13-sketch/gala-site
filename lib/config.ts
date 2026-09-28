@@ -4,6 +4,12 @@
  */
 export const REMINDER_DEADLINE_HOURS = 12;
 
+/** Public origin for assets linked from email (logo). Live Vercel project galadinner. */
+export const PUBLIC_SITE_ORIGIN = "https://galadinneruwcseadover.com";
+
+/** Hosted UWCSEA mark used at the top of the ticket email. */
+export const UWCSEA_LOGO_URL = `${PUBLIC_SITE_ORIGIN}/uwcsea-logo.png`;
+
 /** From header for every Resend message. Domain galauwcseadover.com is verified. */
 export const SENDER_ADDRESS =
   "UWCSEA Dover Graduation Gala <no-reply@galauwcseadover.com>";

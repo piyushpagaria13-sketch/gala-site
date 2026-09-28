@@ -10,6 +10,8 @@ import {
   cancellationText,
   reminderText,
   ticketHtml,
+  ticketSubject,
+  ticketText,
   type AdminBooking,
 } from "@/lib/adminRules";
 import {
@@ -18,12 +20,18 @@ import {
   bookingReceivedText,
 } from "@/lib/bookingReceived";
 
-function withFooter(html: string, text: string): { html: string; text: string } {
+function withFooter(
+  html: string,
+  text: string,
+  htmlFooter = true,
+): { html: string; text: string } {
+  const textOut = `${text}\n\n${emailFooterText()}`;
+  if (!htmlFooter) return { html, text: textOut };
   const footer = emailFooterHtml();
   const themed = html.includes("</div>")
     ? html.replace("</div>", `${footer}</div>`)
     : `${html}${footer}`;
-  return { html: themed, text: `${text}\n\n${emailFooterText()}` };
+  return { html: themed, text: textOut };
 }
 
 async function sendResend(input: {
@@ -31,11 +39,12 @@ async function sendResend(input: {
   subject: string;
   html: string;
   text: string;
+  htmlFooter?: boolean;
   attachments?: { filename: string; content: string; content_type?: string }[];
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("Email isn't set up yet");
-  const body = withFooter(input.html, input.text);
+  const body = withFooter(input.html, input.text, input.htmlFooter);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -69,9 +78,10 @@ export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
   });
   await sendResend({
     to: booking.email,
-    subject: `Your gala ticket ${booking.ref}`,
+    subject: ticketSubject(booking),
     html,
-    text: `Your ticket ${booking.ref}. Table ${booking.tableNo}. Saturday 22 May 2027 · Fairmont Ballroom, Raffles City. Tickets are attached as a PDF.`,
+    text: ticketText(booking),
+    htmlFooter: false,
     attachments: [
       {
         filename: ticketPdfFilename(booking.ref),
