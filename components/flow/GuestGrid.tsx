@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { AddGuestCard } from "@/components/flow/AddGuestCard";
 import { GuestCard } from "@/components/flow/GuestCard";
-import { isGuestComplete, useBookingDraft } from "@/lib/bookingDraft";
+import { isGuestComplete, maxPartySize, useBookingDraft } from "@/lib/bookingDraft";
 import { CLASS_NAMES } from "@/lib/classList";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
+import { padTableGuests, startingGuestCards } from "@/lib/guestRoster";
 import type { Guest } from "@/lib/types";
 
 function isStudent(guest: Guest, index: number): boolean {
@@ -24,49 +25,62 @@ function isBlank(guest: Guest): boolean {
   );
 }
 
-function startingCards(studentName: string): Guest[] {
-  return [
-    { name: studentName, kind: "student" },
-    { name: "", kind: "guest" },
-  ];
-}
-
 /**
- * "Who's coming?" starts with one student card and one guest card.
- * Add student and Add guest sit underneath. Extra blank cards from an
- * older full-table or seat-count seed are dropped.
+ * "Who's coming?" A table booking is always 10 cards. Seats start with one
+ * student and one guest, then add up to the reserved count.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const isTable = draft.type === "table";
-  const start = startingCards(draft.student?.name ?? "");
-  const guests: Guest[] = draft.guests.length > 0 ? draft.guests : start;
+  const cap = maxPartySize(draft);
+  const studentName = draft.student?.name ?? "";
+  const start = startingGuestCards(studentName, isTable ? TABLE_CAPACITY : Math.min(2, cap));
+  const guests: Guest[] = isTable
+    ? padTableGuests(draft.guests, studentName)
+    : (draft.guests.length > 0 ? draft.guests : start).slice(0, cap);
 
-  // Seed two cards once. Also drop a leftover wall of blank cards from the
-  // old full-table seed. This must not run again when Add student adds a card.
   useEffect(() => {
+    if (isTable) {
+      const next = padTableGuests(draft.guests, studentName);
+      if (
+        draft.guests.length === TABLE_CAPACITY &&
+        draft.partySize === TABLE_CAPACITY
+      ) {
+        return;
+      }
+      setDraft({
+        ...draft,
+        guests: next,
+        partySize: TABLE_CAPACITY,
+      });
+      return;
+    }
     const padded =
       draft.guests.length > 2 && draft.guests.slice(1).every(isBlank);
     if (draft.guests.length > 0 && !padded) return;
     setDraft({
       ...draft,
       guests: start,
-      partySize: isTable ? TABLE_CAPACITY : start.length,
+      partySize: draft.partySize ?? start.length,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const filled = guests.length > 0 && guests.every(isGuestComplete);
+    const filled =
+      guests.length > 0 &&
+      guests.every(isGuestComplete) &&
+      (!isTable || guests.length === TABLE_CAPACITY);
     setStepValid(filled);
-  }, [guests, setStepValid]);
+  }, [guests, isTable, setStepValid]);
 
   const commit = (next: Guest[]) => {
-    const size = isTable ? TABLE_CAPACITY : next.length;
+    const clipped = next.slice(0, cap);
+    const size = isTable ? TABLE_CAPACITY : Math.min(clipped.length, cap);
     setDraft({
       ...draft,
-      guests: next,
-      partySize: size,
+      guests: clipped,
+      partySize: isTable ? TABLE_CAPACITY : Math.max(draft.partySize ?? size, size),
       cars: Math.min(draft.cars, size),
       busSeats: Math.min(draft.busSeats, size),
     });
@@ -77,23 +91,17 @@ export function GuestGrid() {
   };
 
   const addGuest = () => {
-    if (guests.length >= TABLE_CAPACITY) return;
+    if (isTable || guests.length >= cap) return;
     commit([...guests, { name: "", kind: "guest" }]);
   };
 
   const addStudent = () => {
-    if (guests.length >= TABLE_CAPACITY) return;
-    const next = [...guests];
-    let lastStudent = -1;
-    next.forEach((guest, index) => {
-      if (isStudent(guest, index)) lastStudent = index;
-    });
-    next.splice(lastStudent + 1, 0, { name: "", kind: "student" });
-    commit(next);
+    if (isTable || guests.length >= cap) return;
+    commit([...guests, { name: "", kind: "student" }]);
   };
 
   const removeGuest = (index: number) => {
-    if (guests.length <= 1) return;
+    if (isTable || guests.length <= 1) return;
     commit(guests.filter((_, i) => i !== index));
   };
 
@@ -106,7 +114,9 @@ export function GuestGrid() {
         Who&apos;s coming?
       </h1>
       <p className="mt-[6px] text-center text-[15px] text-[#9a7f3e]">
-        Dietary preferences help us plan the dinner.
+        {isTable
+          ? "A table is 10 seats. Fill every card."
+          : "Dietary preferences help us plan the dinner."}
       </p>
 
       <div className="mt-[26px] grid w-full max-w-[612px] grid-cols-1 gap-5 sm:grid-cols-2">
@@ -130,12 +140,14 @@ export function GuestGrid() {
               nameOptions={student ? CLASS_NAMES : undefined}
               onChange={(next) => update(i, next)}
               onDelete={
-                guests.length <= 1 ? undefined : () => removeGuest(i)
+                isTable || guests.length <= 1
+                  ? undefined
+                  : () => removeGuest(i)
               }
             />
           );
         })}
-        {guests.length < TABLE_CAPACITY && (
+        {!isTable && guests.length < cap && (
           <div className="grid grid-cols-1 gap-5 sm:col-span-2 sm:grid-cols-2">
             <AddGuestCard label="Add student" onAdd={addStudent} />
             <AddGuestCard label="Add guest" onAdd={addGuest} />

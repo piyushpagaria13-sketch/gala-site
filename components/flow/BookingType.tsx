@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { SeatCountModal } from "@/components/flow/SeatCountModal";
 import { useBookingDraft, type BookingKind } from "@/lib/bookingDraft";
+import { TABLE_CAPACITY } from "@/lib/floorplan";
 
 /**
  * Step 2 — booking type. Figma frames "D2a · Booking type — none (dark)"
@@ -36,7 +37,15 @@ export function BookingType() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
 
   const select = (kind: BookingKind) => {
-    setDraft({ ...draft, type: kind });
+    if (kind === "table") {
+      setDraft({ ...draft, type: "table", partySize: TABLE_CAPACITY });
+    } else {
+      setDraft({
+        ...draft,
+        type: "seats",
+        partySize: draft.type === "table" ? null : draft.partySize,
+      });
+    }
     setStepValid(true);
   };
 

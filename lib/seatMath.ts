@@ -20,18 +20,17 @@ export function derive(
 
 export type CanSelectResult = { ok: true } | { ok: false; error: string };
 
+/** Shown when a party would push a table past 10 seats. */
+export const TABLE_FULL_MESSAGE =
+  "The table is at full capacity. Please try to book some other table.";
+
 /**
  * Capacity check, run only when "Choose this table" is clicked — never
- * pre-disable the button.
+ * pre-disable the button. A table holds at most 10 seats across all bookings.
  */
 export function canSelect(remaining: number, party: number): CanSelectResult {
   if (remaining >= party) return { ok: true };
-  return {
-    ok: false,
-    error: `This table can't accommodate your group — only ${remaining} ${
-      remaining === 1 ? "seat" : "seats"
-    } left. Please choose another table.`,
-  };
+  return { ok: false, error: TABLE_FULL_MESSAGE };
 }
 
 /**
@@ -51,6 +50,6 @@ export function dotRow(
 }
 
 /** Toast copy when create_booking rejects a stale selection at commit time. */
-export function commitRejectionMessage(tableNo: number): string {
-  return `Table ${tableNo} just filled up — please choose another table.`;
+export function commitRejectionMessage(_tableNo?: number): string {
+  return TABLE_FULL_MESSAGE;
 }

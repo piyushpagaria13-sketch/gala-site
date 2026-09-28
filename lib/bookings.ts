@@ -1,3 +1,4 @@
+import { TABLE_FULL_MESSAGE } from "./seatMath";
 import { getSupabaseClient } from "./supabase";
 import type { BookingStatus, Guest } from "@/lib/types";
 
@@ -29,7 +30,7 @@ type CreateBookingRow = {
 export class BookingCapacityError extends Error {
   tableNo: number;
   constructor(tableNo: number) {
-    super(`Table ${tableNo} just filled up — please choose another table.`);
+    super(TABLE_FULL_MESSAGE);
     this.name = "BookingCapacityError";
     this.tableNo = tableNo;
   }

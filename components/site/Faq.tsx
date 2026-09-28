@@ -25,7 +25,7 @@ const FAQ_ITEMS = [
   {
     question: "How much are tickets?",
     answer:
-      "$218 per seat or $2180 for the table. There is no booking fee. The price covers foremost the ballroom, free flow of soft drinks, coffee, tea, complementary bus shuttle, multiple photobooths and DJ spinning student favourites.",
+      "$218 per ticket or $2,180 for the table. There is no booking fee. The price covers the ballroom with three course sit-down dinner, a glass of bubbles for the toast, free flow of soft drinks, coffee, tea, complimentary bus shuttle, multiple photobooths, roving photographers and DJ spinning student favourites.",
   },
   {
     question: "Who do I book under?",
@@ -64,7 +64,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "What about dietary preferences?",
-    answer: "We are catering for chicken, fish, and vegetarian.",
+    answer: "You can choose between chicken, fish and vegetarian.",
   },
   {
     question: "Is there parking or a shuttle?",

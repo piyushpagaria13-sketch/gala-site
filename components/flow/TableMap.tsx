@@ -198,7 +198,8 @@ export function TableMap() {
             const clickable =
               state === "available" ||
               state === "unknown" ||
-              state === "selected";
+              state === "selected" ||
+              state === "soldout";
 
             const styles: Record<TableState, string> = {
               available:

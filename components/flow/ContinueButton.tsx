@@ -15,30 +15,10 @@ import {
 } from "@/lib/bookings";
 import { matchStudent } from "@/lib/students";
 
-/**
- * Header CTA for the booking flow shell. Enabled when the current step
- * reports itself valid via the booking draft context.
- */
-export function ContinueButton() {
-  const {
-    stepValid,
-    goNext,
-    goToStep,
-    step,
-    resetDraft,
-    draft,
-    setDraft,
-    compModalSeenIds,
-    markCompModalSeen,
-    compModalOpen,
-    openCompModal,
-    closeCompModal,
-  } = useBookingDraft();
+/** Close control for the confirmation step — stays in the header. */
+export function HeaderTrailing() {
+  const { step, resetDraft } = useBookingDraft();
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  if (step === "pay") return <span className="w-[44px]" aria-hidden />;
 
   if (step === "done") {
     return (
@@ -54,6 +34,70 @@ export function ContinueButton() {
       </button>
     );
   }
+
+  return <span className="block h-[44px] w-[44px]" aria-hidden />;
+}
+
+/**
+ * Sticky bottom CTA. A black fade sits behind the button so scrolling
+ * content does not run into it.
+ */
+export function ContinueDock() {
+  const { step, seatCountOpen } = useBookingDraft();
+  const showCta = step !== "pay" && step !== "done" && !seatCountOpen;
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20">
+      {showCta && (
+        <div
+          aria-hidden
+          className="absolute inset-x-0 -top-16 h-16 bg-gradient-to-t from-black to-transparent"
+        />
+      )}
+      <div
+        className={
+          showCta
+            ? "pointer-events-auto relative bg-black px-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+            : "pointer-events-auto relative bg-[#131008] px-7 pb-5 pt-2"
+        }
+      >
+        {showCta && (
+          <div className="flex justify-center">
+            <ContinueButton />
+          </div>
+        )}
+        <p
+          className={`text-center text-[12px] text-[#5d4c2b] ${
+            showCta ? "mt-3" : ""
+          }`}
+        >
+          UWCSEA Dover · Graduation Gala Dinner
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Primary CTA for the booking flow. Enabled when the current step reports
+ * itself valid via the booking draft context.
+ */
+export function ContinueButton() {
+  const {
+    stepValid,
+    goNext,
+    goToStep,
+    step,
+    draft,
+    setDraft,
+    compModalSeenIds,
+    markCompModalSeen,
+    compModalOpen,
+    openCompModal,
+    closeCompModal,
+  } = useBookingDraft();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleClick = async () => {
     if (compModalOpen) {
@@ -120,8 +164,8 @@ export function ContinueButton() {
         partySize: partySeatCount(draft),
         guests: draft.guests.map((guest) => guest.name),
       });
-      void syncSheetAfterChange().catch((error) => {
-        console.error("Sheet sync failed", error);
+      void syncSheetAfterChange().catch((sheetError) => {
+        console.error("Sheet sync failed", sheetError);
       });
       if (created.amount === 0) {
         goToStep("done");
@@ -155,7 +199,7 @@ export function ContinueButton() {
           : "Continue"}
       </button>
       {error && (
-        <p className="absolute right-0 top-full mt-1 w-56 text-right text-[11px] text-[#e0937d]">
+        <p className="absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 text-center text-[11px] text-[#e0937d]">
           {error}
         </p>
       )}

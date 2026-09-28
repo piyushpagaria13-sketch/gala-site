@@ -8,8 +8,8 @@ export async function POST() {
   // filled up (remaining < party_size inside its lock), respond with
   // { error: "capacity", tableNo } and 409. The client (Confirm & pay step)
   // must then bounce back to the table map, refetch all counts, and toast
-  // commitRejectionMessage(tableNo) from lib/seatMath.ts:
-  // "Table {n} just filled up — please choose another table."
+  // commitRejectionMessage() from lib/seatMath.ts:
+  // "The table is at full capacity. Please try to book some other table."
   return NextResponse.json(
     { error: "create_booking is not implemented yet" },
     { status: 501 },

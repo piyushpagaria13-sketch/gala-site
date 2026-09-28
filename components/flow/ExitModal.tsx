@@ -85,8 +85,8 @@ export function ExitButton() {
     router.push("/");
   };
 
-  // Confirmation screen: the × moves to the right (rendered by
-  // ContinueButton) — keep the header balanced with a spacer here.
+  // Confirmation screen: the × sits on the right (HeaderTrailing) —
+  // keep the header balanced with a spacer here.
   if (step === "done") {
     return <span className="block h-[44px] w-[44px]" aria-hidden />;
   }

@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
-import { canSelect, derive, dotRow } from "@/lib/seatMath";
+import { TABLE_FULL_MESSAGE, canSelect, derive, dotRow } from "@/lib/seatMath";
 
 /**
  * Availability popover for a single table on the map. Anchored near the
@@ -103,17 +103,16 @@ export function TablePopover({
   const dots = dotRow(booked ?? 0, selected ? partySize : 0);
 
   const handleChoose = () => {
-    // The check runs only on click — every available table opens regardless
-    // of fit, and the button is never pre-disabled.
-    if (remaining !== null) {
-      const result = canSelect(remaining, partySize);
-      if (!result.ok) {
-        setAttemptError(result.error);
-        return;
-      }
+    if (live.state === "loading") return;
+    if (remaining === null) {
+      setAttemptError(TABLE_FULL_MESSAGE);
+      return;
     }
-    // Unknown counts fall through — commit-time validation in the
-    // create_booking RPC catches stale/oversized selections.
+    const result = canSelect(remaining, partySize);
+    if (!result.ok) {
+      setAttemptError(result.error);
+      return;
+    }
     onChoose(tableNo);
   };
 
@@ -169,7 +168,7 @@ export function TablePopover({
 
         {justSoldOut ? (
           <p className="mt-4 w-full rounded-[8px] border border-[rgba(224,147,125,0.35)] bg-[rgba(224,147,125,0.08)] px-3 py-[10px] text-[12px] leading-[1.5] text-[#e0937d]">
-            This table just sold out.
+            {TABLE_FULL_MESSAGE}
           </p>
         ) : selected ? (
           <button

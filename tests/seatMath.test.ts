@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { canSelect, derive, dotRow } from "../lib/seatMath.ts";
+import { canSelect, derive, dotRow, TABLE_FULL_MESSAGE } from "../lib/seatMath.ts";
 
 test("derive: one 3-seat booking → 3 filled, 7 remaining", () => {
   assert.deepEqual(derive([3]), { filled: 3, remaining: 7 });
@@ -14,20 +14,26 @@ test("derive: no bookings → 0 filled, 10 remaining", () => {
   assert.deepEqual(derive([]), { filled: 0, remaining: 10 });
 });
 
-test("canSelect: remaining 2, party 3 → rejected, error mentions 2", () => {
+test("canSelect: remaining 2, party 3 is full capacity", () => {
   const res = canSelect(2, 3);
   assert.equal(res.ok, false);
   if (!res.ok) {
-    assert.match(res.error, /only 2 seats left/);
+    assert.equal(res.error, TABLE_FULL_MESSAGE);
   }
 });
 
-test("canSelect: remaining 1 uses singular 'seat'", () => {
-  const res = canSelect(1, 3);
+test("canSelect: remaining 0, party 1 is full capacity", () => {
+  const res = canSelect(0, 1);
   assert.equal(res.ok, false);
   if (!res.ok) {
-    assert.match(res.error, /only 1 seat left/);
+    assert.equal(res.error, TABLE_FULL_MESSAGE);
   }
+});
+
+test("canSelect: remaining 2 plus party 2 fills the table; 3 does not", () => {
+  assert.deepEqual(canSelect(2, 2), { ok: true });
+  const over = canSelect(2, 3);
+  assert.equal(over.ok, false);
 });
 
 test("canSelect: remaining 5, party 3 → ok", () => {

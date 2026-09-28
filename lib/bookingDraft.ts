@@ -103,11 +103,22 @@ const BookingDraftContext = createContext<BookingDraftContextValue | null>(
 
 const STORAGE_KEY = "gala-booking-draft";
 
-/** Seats in this booking — guest cards are the source of truth on the seats path. */
+/** Seats this booking may occupy. A table never holds more than 10. */
+export function maxPartySize(draft: BookingDraft): number {
+  if (draft.type === "table") return TABLE_CAPACITY;
+  const reserved = draft.partySize;
+  if (reserved != null && reserved > 0) {
+    return Math.min(reserved, TABLE_CAPACITY);
+  }
+  return TABLE_CAPACITY;
+}
+
+/** Seats in this booking — guest cards on the seats path, capped at the reserved count. */
 export function partySeatCount(draft: BookingDraft): number {
   if (draft.type === "table") return TABLE_CAPACITY;
-  if (draft.guests.length > 0) return draft.guests.length;
-  return draft.partySize ?? 1;
+  const cap = maxPartySize(draft);
+  if (draft.guests.length > 0) return Math.min(draft.guests.length, cap);
+  return Math.min(draft.partySize ?? 1, cap);
 }
 
 /** A guest card is complete once name, graduating student, relationship, and dietary are filled. Students skip guest-only fields. */
@@ -136,8 +147,15 @@ function isStepComplete(step: BookingStep, draft: BookingDraft): boolean {
       return draft.type !== null;
     case "table":
       return draft.tableNo !== null;
-    case "guests":
-      return draft.guests.length > 0 && draft.guests.every(isGuestComplete);
+    case "guests": {
+      if (draft.guests.length === 0 || !draft.guests.every(isGuestComplete)) {
+        return false;
+      }
+      if (draft.type === "table") {
+        return draft.guests.length === TABLE_CAPACITY;
+      }
+      return true;
+    }
     case "review":
       // "Confirm & pay" is always actionable; the create_booking RPC is the
       // final validator.
