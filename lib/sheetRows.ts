@@ -7,6 +7,7 @@ export const TABLE_COUNT = 100;
 export type MirrorGuest = {
   name: string;
   age: string;
+  title: string;
   dietary: string;
   allergyNote: string;
   sortOrder: number;
@@ -50,6 +51,7 @@ export const BOOKINGS_HEADER = [
   "Table",
   "Seats",
   "Guest name",
+  "Relationship",
   "Age",
   "Dietary",
   "Allergy note",
@@ -63,6 +65,7 @@ export const BOOKINGS_HEADER = [
 
 export const TABLES_HEADER = [
   "Guest",
+  "Relationship",
   "Age",
   "Dietary",
   "Allergy",
@@ -92,6 +95,7 @@ export function bookingsTab(snapshot: SheetSnapshot): string[][] {
       String(booking.tableNo),
       String(booking.partySize),
       guest.name,
+      guest.title,
       guest.age,
       guest.dietary,
       guest.allergyNote,
@@ -126,7 +130,7 @@ export function tablesTab(snapshot: SheetSnapshot): {
 
   const rows: string[][] = [TABLES_HEADER];
   const boldRows: number[] = [];
-  const blank = ["", "", "", "", "", "", ""];
+  const blank = ["", "", "", "", "", "", "", ""];
 
   for (let tableNo = 1; tableNo <= TABLE_COUNT; tableNo++) {
     boldRows.push(rows.length);
@@ -151,6 +155,7 @@ export function tablesTab(snapshot: SheetSnapshot): {
       for (const guest of guestsInOrder(booking)) {
         rows.push([
           guest.name,
+          guest.title,
           guest.age,
           guest.dietary,
           guest.allergyNote,
@@ -194,7 +199,7 @@ export function sheetFormatRequests(sheetId: number, boldRows: number[]) {
           startRowIndex: 0,
           endRowIndex: 2000,
           startColumnIndex: 0,
-          endColumnIndex: 14,
+          endColumnIndex: 16,
         },
         cell: { userEnteredFormat: { textFormat: { bold: false } } },
         fields: "userEnteredFormat.textFormat.bold",

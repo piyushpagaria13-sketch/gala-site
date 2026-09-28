@@ -1,15 +1,9 @@
--- Locked RPC create_booking.
--- Requires 01_schema.sql and 04_comp_seats.sql (reads students.comp_seats).
---
--- 1. row lock on the target table
--- 2. recount remaining seats (derived: 10 minus sum of party sizes of
---    non-cancelled bookings)
--- 3. reject if party > remaining OR table is blocked
--- 4. reject if bus_seats > party_size or cars > party_size
--- 5. read comp_seats server-side; amount = max(party − comps, 0) × 218
---    (ignores any client-sent price)
--- 6. insert booking + guests; status paid and amount 0 when nothing is payable
--- 7. generate ref GALA-NNNN and return it
+-- Guest relationship from the booking form (Mother/Father, Siblings @UWCSEA,
+-- Alumni, Others). Shown as "Relationship" next to Guest name on the Sheet.
+-- Paste this whole file into the Supabase SQL editor.
+
+alter table guests
+  add column if not exists title text;
 
 create or replace function create_booking(
   p_table_no integer,

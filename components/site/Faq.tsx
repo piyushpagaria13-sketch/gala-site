@@ -5,7 +5,7 @@ import { useState } from "react";
 
 /**
  * FAQ section — Figma frames "FAQ / all closed" (262:303) and
- * "FAQ / Q1..Q9 open" (259:15, 261:15, 261:87, 261:159, 261:231,
+ * "FAQ / Q1..Q11 open" (259:15, 261:15, 261:87, 261:159, 261:231,
  * 262:15, 262:87, 262:159, 262:231).
  * Accordion: all items start closed; clicking a question toggles it,
  * with one item open at a time (matching the designs).
@@ -36,6 +36,16 @@ const FAQ_ITEMS = [
     question: "Can we choose our table and sit with friends?",
     answer:
       "Yes — the booking page shows a live map of all 100 tables. Tap any open table to see how many of its 10 seats are left, and choose it for your group. To sit with friends, agree on a table and book while seats remain, or take neighbouring tables.",
+  },
+  {
+    question: "Can I book a table only for graduates?",
+    answer:
+      "Yes, a group of students can book a table just for themselves by removing the guest card on the portal.",
+  },
+  {
+    question: "Can I book a table just for the parents?",
+    answer:
+      "Yes, a group of parents can book a table just for themselves by removing the student card on the portal.",
   },
   {
     question: "How do I pay?",

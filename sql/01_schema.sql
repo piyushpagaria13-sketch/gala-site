@@ -37,6 +37,7 @@ create table if not exists guests (
   booking_id uuid not null references bookings (id) on delete cascade,
   name text not null,
   age text,
+  title text,
   dietary text,
   allergy_note text,
   sort_order integer not null default 0

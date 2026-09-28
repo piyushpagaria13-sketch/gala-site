@@ -34,6 +34,7 @@ type GuestRow = {
   booking_id: string;
   name: string;
   age: string | null;
+  title: string | null;
   dietary: string | null;
   allergy_note: string | null;
   sort_order: number;
@@ -77,10 +78,18 @@ export async function loadSnapshot(): Promise<SheetSnapshot> {
   if (ids.length > 0) {
     const guestsRes = await supabase
       .from("guests")
-      .select("booking_id, name, age, dietary, allergy_note, sort_order")
+      .select("booking_id, name, age, title, dietary, allergy_note, sort_order")
       .in("booking_id", ids);
-    if (guestsRes.error) throw guestsRes.error;
-    guestRows = (guestsRes.data ?? []) as GuestRow[];
+    if (guestsRes.error) {
+      const fallback = await supabase
+        .from("guests")
+        .select("booking_id, name, age, dietary, allergy_note, sort_order")
+        .in("booking_id", ids);
+      if (fallback.error) throw guestsRes.error;
+      guestRows = (fallback.data ?? []) as GuestRow[];
+    } else {
+      guestRows = (guestsRes.data ?? []) as GuestRow[];
+    }
   }
 
   const students = new Map(
@@ -92,6 +101,7 @@ export async function loadSnapshot(): Promise<SheetSnapshot> {
     list.push({
       name: guest.name,
       age: guest.age ?? "",
+      title: guest.title ?? "",
       dietary: guest.dietary ?? "",
       allergyNote: guest.allergy_note ?? "",
       sortOrder: guest.sort_order,
