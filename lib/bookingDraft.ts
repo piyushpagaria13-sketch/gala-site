@@ -12,6 +12,12 @@ import type { Guest, Student, BookingStatus } from "./types";
 import { TABLE_CAPACITY } from "./floorplan";
 import { isValidEmail } from "./email";
 import { isValidSingaporePhone } from "./phone";
+import {
+  isGuestComplete,
+  isGuestRosterComplete,
+} from "./guestRoster";
+
+export { isGuestComplete, isGuestRosterComplete };
 
 export type BookingKind = "seats" | "table";
 
@@ -121,17 +127,8 @@ export function partySeatCount(draft: BookingDraft): number {
   return Math.min(draft.partySize ?? 1, cap);
 }
 
-/** A guest card is complete once name, graduating student, relationship, and dietary are filled. Students skip guest-only fields. */
-export function isGuestComplete(guest: Guest): boolean {
-  if (guest.kind === "student") {
-    return Boolean(guest.name.trim() && guest.dietary);
-  }
-  return Boolean(
-    guest.name.trim() &&
-      guest.graduatingStudent?.trim() &&
-      guest.title &&
-      guest.dietary,
-  );
+function guestsForStep(draft: BookingDraft): Guest[] {
+  return draft.guests;
 }
 
 /** Validity of a step, derived from what the draft already holds. */
@@ -147,19 +144,10 @@ function isStepComplete(step: BookingStep, draft: BookingDraft): boolean {
       return draft.type !== null;
     case "table":
       return draft.tableNo !== null;
-    case "guests": {
-      if (draft.guests.length === 0 || !draft.guests.every(isGuestComplete)) {
-        return false;
-      }
-      if (draft.type === "table") {
-        return draft.guests.length === TABLE_CAPACITY;
-      }
-      return true;
-    }
+    case "guests":
+      return isGuestRosterComplete(draft.type, guestsForStep(draft));
     case "review":
-      // "Confirm & pay" is always actionable; the create_booking RPC is the
-      // final validator.
-      return true;
+      return isGuestRosterComplete(draft.type, guestsForStep(draft));
     case "pay":
       // No header CTA on the pay screen — "I've paid" lives in the content.
       return false;
@@ -203,6 +191,13 @@ export function BookingDraftProvider({ children }: { children: ReactNode }) {
         // Seats path: ask for the seat count before moving on.
         if (step === "type" && draft.type === "seats") {
           setSeatCountOpen(true);
+          return;
+        }
+        if (
+          step === "guests" &&
+          !isGuestRosterComplete(draft.type, guestsForStep(draft))
+        ) {
+          setStepValid(false);
           return;
         }
         const next = STEP_ORDER[STEP_ORDER.indexOf(step) + 1];

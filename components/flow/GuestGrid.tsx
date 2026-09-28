@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
-import { AddGuestCard } from "@/components/flow/AddGuestCard";
+import { useEffect, useLayoutEffect } from "react";
 import { GuestCard } from "@/components/flow/GuestCard";
-import { isGuestComplete, maxPartySize, useBookingDraft } from "@/lib/bookingDraft";
+import { useBookingDraft } from "@/lib/bookingDraft";
 import { CLASS_NAMES } from "@/lib/classList";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
-import { padTableGuests, startingGuestCards } from "@/lib/guestRoster";
+import {
+  DUPLICATE_STUDENT_MESSAGE,
+  duplicateStudentIndexes,
+  isGuestRosterComplete,
+  startingGuestCards,
+  trimTrailingBlankGuests,
+} from "@/lib/guestRoster";
 import type { Guest } from "@/lib/types";
 
 function isStudent(guest: Guest, index: number): boolean {
@@ -15,72 +20,55 @@ function isStudent(guest: Guest, index: number): boolean {
   return index === 0;
 }
 
-function isBlank(guest: Guest): boolean {
-  return (
-    !guest.name.trim() &&
-    !guest.graduatingStudent?.trim() &&
-    !guest.title &&
-    !guest.dietary &&
-    !guest.allergyNote
-  );
-}
-
 /**
- * "Who's coming?" A table booking is always 10 cards. Seats start with one
- * student and one guest, then add up to the reserved count.
+ * "Who's coming?" Starts with a student and a guest. Add student / Add guest
+ * (in the Continue dock) grow the roster up to 10. A table still cannot
+ * continue until all 10 cards are filled.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();
   const isTable = draft.type === "table";
-  const cap = maxPartySize(draft);
   const studentName = draft.student?.name ?? "";
-  const start = startingGuestCards(studentName, isTable ? TABLE_CAPACITY : Math.min(2, cap));
-  const guests: Guest[] = isTable
-    ? padTableGuests(draft.guests, studentName)
-    : (draft.guests.length > 0 ? draft.guests : start).slice(0, cap);
+  const startCount = isTable ? 2 : Math.min(2, draft.partySize ?? 2);
+  const start = startingGuestCards(studentName, startCount);
+  const guests: Guest[] = (
+    draft.guests.length > 0 ? draft.guests : start
+  ).slice(0, TABLE_CAPACITY);
 
-  useEffect(() => {
-    if (isTable) {
-      const next = padTableGuests(draft.guests, studentName);
-      if (
-        draft.guests.length === TABLE_CAPACITY &&
-        draft.partySize === TABLE_CAPACITY
-      ) {
-        return;
-      }
-      setDraft({
-        ...draft,
-        guests: next,
-        partySize: TABLE_CAPACITY,
-      });
+  useLayoutEffect(() => {
+    const trimmed = trimTrailingBlankGuests(
+      draft.guests.length > 0 ? draft.guests : start,
+      startCount,
+    );
+    if (
+      draft.guests.length === trimmed.length &&
+      (!isTable || draft.partySize === TABLE_CAPACITY)
+    ) {
       return;
     }
-    const padded =
-      draft.guests.length > 2 && draft.guests.slice(1).every(isBlank);
-    if (draft.guests.length > 0 && !padded) return;
     setDraft({
       ...draft,
-      guests: start,
-      partySize: draft.partySize ?? start.length,
+      guests: trimmed,
+      partySize: isTable
+        ? TABLE_CAPACITY
+        : Math.max(draft.partySize ?? trimmed.length, trimmed.length),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isTable]);
 
   useEffect(() => {
-    const filled =
-      guests.length > 0 &&
-      guests.every(isGuestComplete) &&
-      (!isTable || guests.length === TABLE_CAPACITY);
-    setStepValid(filled);
-  }, [guests, isTable, setStepValid]);
+    setStepValid(isGuestRosterComplete(draft.type, guests));
+  }, [draft.type, guests, setStepValid]);
 
   const commit = (next: Guest[]) => {
-    const clipped = next.slice(0, cap);
-    const size = isTable ? TABLE_CAPACITY : Math.min(clipped.length, cap);
+    const clipped = next.slice(0, TABLE_CAPACITY);
+    const size = clipped.length;
     setDraft({
       ...draft,
       guests: clipped,
-      partySize: isTable ? TABLE_CAPACITY : Math.max(draft.partySize ?? size, size),
+      partySize: isTable
+        ? TABLE_CAPACITY
+        : Math.max(draft.partySize ?? size, size),
       cars: Math.min(draft.cars, size),
       busSeats: Math.min(draft.busSeats, size),
     });
@@ -90,21 +78,19 @@ export function GuestGrid() {
     commit(guests.map((g, i) => (i === index ? nextGuest : g)));
   };
 
-  const addGuest = () => {
-    if (isTable || guests.length >= cap) return;
-    commit([...guests, { name: "", kind: "guest" }]);
-  };
-
-  const addStudent = () => {
-    if (isTable || guests.length >= cap) return;
-    commit([...guests, { name: "", kind: "student" }]);
-  };
-
   const removeGuest = (index: number) => {
-    if (isTable || guests.length <= 1) return;
+    if (guests.length <= 1) return;
     commit(guests.filter((_, i) => i !== index));
   };
 
+  const takenStudentNames = new Set(
+    guests
+      .map((guest, index) =>
+        isStudent(guest, index) ? guest.name.trim().replace(/\s+/g, " ").toLowerCase() : "",
+      )
+      .filter(Boolean),
+  );
+  const duplicateIndexes = new Set(duplicateStudentIndexes(guests));
   let studentCount = 0;
   let guestCount = 0;
 
@@ -131,28 +117,30 @@ export function GuestGrid() {
             : isTable
               ? `Guest ${guestCount}`
               : `Guest ${i + 1}`;
+          const ownName = guest.name.trim().replace(/\s+/g, " ").toLowerCase();
+          const nameOptions = student
+            ? CLASS_NAMES.filter((name) => {
+                const key = name.trim().replace(/\s+/g, " ").toLowerCase();
+                return key === ownName || !takenStudentNames.has(key);
+              })
+            : undefined;
           return (
             <GuestCard
               key={i}
               title={title}
               badge={student ? "GRADUATE" : undefined}
               guest={guest}
-              nameOptions={student ? CLASS_NAMES : undefined}
+              nameOptions={nameOptions}
+              nameError={
+                duplicateIndexes.has(i) ? DUPLICATE_STUDENT_MESSAGE : undefined
+              }
               onChange={(next) => update(i, next)}
               onDelete={
-                isTable || guests.length <= 1
-                  ? undefined
-                  : () => removeGuest(i)
+                guests.length <= 1 ? undefined : () => removeGuest(i)
               }
             />
           );
         })}
-        {!isTable && guests.length < cap && (
-          <div className="grid grid-cols-1 gap-5 sm:col-span-2 sm:grid-cols-2">
-            <AddGuestCard label="Add student" onAdd={addStudent} />
-            <AddGuestCard label="Add guest" onAdd={addGuest} />
-          </div>
-        )}
       </div>
     </div>
   );

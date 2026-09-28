@@ -106,6 +106,8 @@ type GuestCardProps = {
   onChange: (next: Guest) => void;
   /** Class-list names. When set, the name field opens this dropdown. */
   nameOptions?: string[];
+  /** Shown under the name field when this student is already on another card. */
+  nameError?: string;
   /** Remove this card. Hidden only when it is the last remaining card. */
   onDelete?: () => void;
 };
@@ -117,6 +119,7 @@ export function GuestCard({
   onChange,
   onDelete,
   nameOptions,
+  nameError,
 }: GuestCardProps) {
   const id = useId();
 
@@ -165,7 +168,9 @@ export function GuestCard({
             placeholder="Choose a student"
             options={nameOptions}
             onChange={(name) => onChange({ ...guest, name })}
-            fieldClass={`${FIELD} bg-[#131008]`}
+            fieldClass={`${FIELD} bg-[#131008] ${
+              nameError ? "border-[#e0937d] focus:border-[#e0937d]" : ""
+            }`}
           />
         ) : (
           <input
@@ -173,9 +178,15 @@ export function GuestCard({
             type="text"
             value={guest.name}
             placeholder="Full name"
+            aria-invalid={Boolean(nameError)}
             onChange={(e) => onChange({ ...guest, name: e.target.value })}
-            className={`${FIELD} bg-[#1a1610]`}
+            className={`${FIELD} bg-[#1a1610] ${
+              nameError ? "border-[#e0937d] focus:border-[#e0937d]" : ""
+            }`}
           />
+        )}
+        {nameError && (
+          <p className="text-[13px] leading-[1.5] text-[#e0937d]">{nameError}</p>
         )}
       </div>
 

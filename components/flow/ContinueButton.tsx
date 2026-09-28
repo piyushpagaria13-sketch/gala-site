@@ -13,6 +13,16 @@ import {
   BookingCapacityError,
   createBooking,
 } from "@/lib/bookings";
+import { AddGuestCard } from "@/components/flow/AddGuestCard";
+import { TABLE_CAPACITY } from "@/lib/floorplan";
+import {
+    appendGuestCard,
+    canAddGuestCard,
+    isGuestRosterComplete,
+    padTableGuests,
+    startingGuestCards,
+    TABLE_ROSTER_MESSAGE,
+} from "@/lib/guestRoster";
 import { matchStudent } from "@/lib/students";
 
 /** Close control for the confirmation step — stays in the header. */
@@ -39,28 +49,54 @@ export function HeaderTrailing() {
 }
 
 /**
- * Sticky bottom CTA. A black fade sits behind the button so scrolling
- * content does not run into it.
+ * Sticky bottom CTA. Add student / Add guest sit here on the guests step so
+ * they are never hidden under the button. A black fade covers scrolling
+ * cards just above this bar.
  */
 export function ContinueDock() {
-  const { step, seatCountOpen } = useBookingDraft();
+  const { step, seatCountOpen, draft, setDraft } = useBookingDraft();
   const showCta = step !== "pay" && step !== "done" && !seatCountOpen;
+  const startCount =
+    draft.type === "table" ? 2 : Math.min(2, draft.partySize ?? 2);
+  const roster =
+    draft.guests.length > 0
+      ? draft.guests.slice(0, TABLE_CAPACITY)
+      : startingGuestCards(draft.student?.name ?? "", startCount);
+  const showAdd = step === "guests" && canAddGuestCard(roster);
+
+  const addCard = (kind: "student" | "guest") => {
+    const next = appendGuestCard(roster, kind);
+    setDraft({
+      ...draft,
+      guests: next,
+      partySize:
+        draft.type === "table"
+          ? TABLE_CAPACITY
+          : Math.max(draft.partySize ?? next.length, next.length),
+    });
+  };
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20">
+    <div className="relative z-20 shrink-0">
       {showCta && (
         <div
           aria-hidden
-          className="absolute inset-x-0 -top-16 h-16 bg-gradient-to-t from-black to-transparent"
+          className="pointer-events-none absolute inset-x-0 -top-16 h-16 bg-gradient-to-t from-black to-transparent"
         />
       )}
       <div
         className={
           showCta
-            ? "pointer-events-auto relative bg-black px-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
-            : "pointer-events-auto relative bg-[#131008] px-7 pb-5 pt-2"
+            ? "relative bg-black px-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+            : "relative bg-[#131008] px-7 pb-5 pt-2"
         }
       >
+        {showAdd && (
+          <div className="mx-auto mb-3 grid w-full max-w-[612px] grid-cols-2 gap-4">
+            <AddGuestCard label="Add student" onAdd={() => addCard("student")} />
+            <AddGuestCard label="Add guest" onAdd={() => addCard("guest")} />
+          </div>
+        )}
         {showCta && (
           <div className="flex justify-center">
             <ContinueButton />
@@ -99,6 +135,15 @@ export function ContinueButton() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const rosterGuests =
+    draft.type === "table"
+      ? padTableGuests(draft.guests, draft.student?.name ?? "")
+      : draft.guests;
+  const rosterReady =
+    step === "guests" || step === "review"
+      ? isGuestRosterComplete(draft.type, rosterGuests)
+      : true;
+
   const handleClick = async () => {
     if (compModalOpen) {
       closeCompModal();
@@ -129,6 +174,12 @@ export function ContinueButton() {
       return;
     }
 
+    if (step === "guests") {
+      if (!isGuestRosterComplete(draft.type, rosterGuests)) return;
+      goNext();
+      return;
+    }
+
     if (step !== "review") {
       goNext();
       return;
@@ -136,6 +187,15 @@ export function ContinueButton() {
 
     const studentId = draft.student?.id?.trim() || null;
     if (draft.tableNo == null) return;
+    if (!isGuestRosterComplete(draft.type, rosterGuests)) {
+      setError(
+        draft.type === "table"
+          ? TABLE_ROSTER_MESSAGE
+          : "Fill every guest card before continuing.",
+      );
+      goToStep("guests");
+      return;
+    }
 
     setBusy(true);
     setError(null);
@@ -144,7 +204,7 @@ export function ContinueButton() {
         tableNo: draft.tableNo,
         partySize: partySeatCount(draft),
         studentId,
-        guests: draft.guests,
+        guests: rosterGuests,
         cars: draft.cars,
         busSeats: draft.busSeats,
         contact: draft.contact?.phone ?? null,
@@ -162,7 +222,7 @@ export function ContinueButton() {
         ref: created.ref,
         tableNo: draft.tableNo,
         partySize: partySeatCount(draft),
-        guests: draft.guests.map((guest) => guest.name),
+        guests: rosterGuests.map((guest) => guest.name),
       });
       void syncSheetAfterChange().catch((sheetError) => {
         console.error("Sheet sync failed", sheetError);
@@ -188,7 +248,7 @@ export function ContinueButton() {
     <div className="relative">
       <button
         type="button"
-        disabled={!stepValid || busy}
+        disabled={!stepValid || busy || !rosterReady}
         onClick={() => void handleClick()}
         className="rounded-pill bg-gold px-7 py-3 text-[16px] font-semibold text-[#241a06] transition-opacity disabled:opacity-[0.35]"
       >
