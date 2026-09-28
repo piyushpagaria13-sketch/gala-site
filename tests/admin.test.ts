@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
 import { adminCookieMatches, adminGuard, passwordsMatch } from "../lib/adminAuth.ts";
 import {
@@ -206,8 +208,11 @@ test("ticket email is the UWCSEA table layout with the logo and no QR", () => {
     html,
     /GALA-0235 · Table 12 · 3 seats · Saturday, 22 May 2027 · Fairmont Ballroom, Raffles City/,
   );
-  assert.match(html, /https:\/\/galadinneruwcseadover\.com\/uwcsea-logo\.png/);
+  assert.match(html, /src="cid:uwcsea-logo"/);
   assert.match(html, /alt="UWCSEA"/);
+  const logo = readFileSync(path.join(process.cwd(), "public", "uwcsea-logo.png"));
+  assert.equal(logo[1], 0x50);
+  assert.equal(logo.subarray(1, 4).toString("ascii"), "PNG");
   assert.match(html, /isn't monitored/);
   assert.match(html, /mailto:Padovergraduation@gapps\.uwcsea\.edu\.sg/i);
   assert.doesNotMatch(html, /QR code/i);

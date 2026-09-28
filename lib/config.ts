@@ -4,10 +4,13 @@
  */
 export const REMINDER_DEADLINE_HOURS = 12;
 
-/** Public origin for assets linked from email (logo). Live Vercel project galadinner. */
-export const PUBLIC_SITE_ORIGIN = "https://galadinneruwcseadover.com";
+/**
+ * Public origin for hosted assets. The ticket email logo is attached inline
+ * (cid:uwcsea-logo) so it does not depend on this host resolving.
+ */
+export const PUBLIC_SITE_ORIGIN = "https://gala-site.vercel.app";
 
-/** Hosted UWCSEA mark used at the top of the ticket email. */
+/** Hosted copy of the UWCSEA mark. Ticket mail uses the CID attachment instead. */
 export const UWCSEA_LOGO_URL = `${PUBLIC_SITE_ORIGIN}/uwcsea-logo.png`;
 
 /** From header for every Resend message. Domain galauwcseadover.com is verified. */

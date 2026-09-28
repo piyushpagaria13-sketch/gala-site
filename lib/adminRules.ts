@@ -143,9 +143,8 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-/** Hosted logo on the live site. Matches lib/config UWCSEA_LOGO_URL. */
-export const TICKET_LOGO_URL =
-  "https://galadinneruwcseadover.com/uwcsea-logo.png";
+/** Inline Content-ID for the UWCSEA mark attached to the ticket email. */
+export const TICKET_LOGO_CID = "uwcsea-logo";
 
 const TICKET_FOOTER_MAIL = "Padovergraduation@gapps.uwcsea.edu.sg";
 
@@ -190,7 +189,7 @@ export function ticketHtml(booking: AdminBooking): string {
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:600px;max-width:600px;">
           <tr>
             <td align="center" bgcolor="#ffffff" style="background-color:#ffffff;padding:28px 32px 24px 32px;">
-              <img src="${TICKET_LOGO_URL}" alt="UWCSEA" width="200" height="120" style="display:block;border:0;outline:none;text-decoration:none;width:200px;height:120px;" />
+              <img src="cid:${TICKET_LOGO_CID}" alt="UWCSEA" width="200" height="120" style="display:block;border:0;outline:none;text-decoration:none;width:200px;height:120px;" />
             </td>
           </tr>
           <tr>

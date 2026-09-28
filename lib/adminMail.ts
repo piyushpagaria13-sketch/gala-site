@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import {
   emailFooterHtml,
   emailFooterText,
@@ -9,6 +11,7 @@ import { buildTicketPdf, ticketPdfFilename } from "@/lib/ticketPdf";
 import {
   cancellationText,
   reminderText,
+  TICKET_LOGO_CID,
   ticketHtml,
   ticketSubject,
   ticketText,
@@ -40,7 +43,12 @@ async function sendResend(input: {
   html: string;
   text: string;
   htmlFooter?: boolean;
-  attachments?: { filename: string; content: string; content_type?: string }[];
+  attachments?: {
+    filename: string;
+    content: string;
+    content_type?: string;
+    content_id?: string;
+  }[];
 }): Promise<void> {
   const key = process.env.RESEND_API_KEY;
   if (!key) throw new Error("Email isn't set up yet");
@@ -67,15 +75,35 @@ async function sendResend(input: {
   }
 }
 
+async function ticketLogoAttachment(): Promise<{
+  filename: string;
+  content: string;
+  content_type: string;
+  content_id: string;
+}> {
+  const bytes = await readFile(
+    path.join(process.cwd(), "public", "uwcsea-logo.png"),
+  );
+  return {
+    filename: "uwcsea-logo.png",
+    content: Buffer.from(bytes).toString("base64"),
+    content_type: "image/png",
+    content_id: TICKET_LOGO_CID,
+  };
+}
+
 export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
   const html = ticketHtml(booking);
-  const pdf = await buildTicketPdf({
-    ref: booking.ref,
-    tableNo: booking.tableNo,
-    partySize: booking.partySize,
-    guests: booking.guests,
-    seatNumbers: SEAT_NUMBERS_ON_TICKETS,
-  });
+  const [pdf, logo] = await Promise.all([
+    buildTicketPdf({
+      ref: booking.ref,
+      tableNo: booking.tableNo,
+      partySize: booking.partySize,
+      guests: booking.guests,
+      seatNumbers: SEAT_NUMBERS_ON_TICKETS,
+    }),
+    ticketLogoAttachment(),
+  ]);
   await sendResend({
     to: booking.email,
     subject: ticketSubject(booking),
@@ -83,6 +111,7 @@ export async function sendTicketEmail(booking: AdminBooking): Promise<void> {
     text: ticketText(booking),
     htmlFooter: false,
     attachments: [
+      logo,
       {
         filename: ticketPdfFilename(booking.ref),
         content: Buffer.from(pdf).toString("base64"),
