@@ -249,6 +249,22 @@ export function AdminConsole({
                     </button>
                     <button
                       type="button"
+                      disabled={!actions.resend || busy !== null}
+                      onClick={() =>
+                        void callAction("/api/admin/resend", booking, (_next, exportError) =>
+                          showToast(
+                            exportError
+                              ? `Ticket resent for ${booking.ref}. The Sheet did not update.`
+                              : `Ticket resent for ${booking.ref}`,
+                          ),
+                        )
+                      }
+                      className="rounded-pill border border-[#d4af37] px-3 py-1.5 text-[13px] font-semibold text-[#e3c46a] disabled:opacity-35"
+                    >
+                      Resend
+                    </button>
+                    <button
+                      type="button"
                       disabled={!actions.remind || busy !== null}
                       onClick={() =>
                         void callAction("/api/admin/remind", booking, () =>

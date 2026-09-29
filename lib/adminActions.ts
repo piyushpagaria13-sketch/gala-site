@@ -5,6 +5,7 @@ import {
   runCancel,
   runConfirm,
   runRemind,
+  runResend,
   type AdminBooking,
 } from "@/lib/adminRules";
 import { exportAll } from "@/lib/sheetExport";
@@ -45,6 +46,25 @@ export async function confirmAndSendTicket(ref: string): Promise<AdminActionResu
       const { error } = await supabase
         .from("bookings")
         .update({ status: "paid", ticket_sent_at: at })
+        .eq("ref", ref);
+      if (error) throw error;
+    },
+  });
+  const exportError = result.sent ? await exportAfterSave() : undefined;
+  const fresh = (await loadAdminBooking(ref)) ?? result.booking;
+  return { ok: !result.message, booking: fresh, message: result.message, exportError };
+}
+
+export async function resendTicket(ref: string): Promise<AdminActionResult> {
+  const booking = await requireBooking(ref);
+  const supabase = getSupabaseServiceClient();
+  const result = await runResend(booking, {
+    now: new Date().toISOString(),
+    send: () => sendTicketEmail(booking),
+    saveSent: async (at) => {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ ticket_sent_at: at })
         .eq("ref", ref);
       if (error) throw error;
     },

@@ -36,6 +36,7 @@ export type AdminBooking = {
 
 export type ButtonState = {
   confirm: boolean;
+  resend: boolean;
   remind: boolean;
   cancel: boolean;
   dimmed: boolean;
@@ -48,18 +49,32 @@ export function buttonState(
   status: AdminStatus,
   ticketSentAt: string | null = null,
 ): ButtonState {
+  const sent = Boolean(ticketSentAt);
   if (status === "cancelled") {
-    return { confirm: false, remind: false, cancel: false, dimmed: true };
+    return {
+      confirm: false,
+      resend: false,
+      remind: false,
+      cancel: false,
+      dimmed: true,
+    };
   }
   if (status === "paid") {
     return {
-      confirm: !ticketSentAt,
+      confirm: !sent,
+      resend: sent,
       remind: false,
       cancel: false,
       dimmed: false,
     };
   }
-  return { confirm: true, remind: true, cancel: true, dimmed: false };
+  return {
+    confirm: !sent,
+    resend: sent,
+    remind: true,
+    cancel: true,
+    dimmed: false,
+  };
 }
 
 export function guestLine(guest: AdminGuest): string {
@@ -125,6 +140,21 @@ export function planConfirm(booking: AdminBooking): ConfirmPlan {
 export function planRemind(
   booking: AdminBooking,
 ): { type: "no-email"; message: string } | { type: "send" } {
+  if (!booking.email.trim()) {
+    return { type: "no-email", message: noEmailMessage(booking.contact) };
+  }
+  return { type: "send" };
+}
+
+export type ResendPlan =
+  | { type: "noop" }
+  | { type: "no-email"; message: string }
+  | { type: "send" };
+
+export function planResend(booking: AdminBooking): ResendPlan {
+  if (booking.status === "cancelled" || !booking.ticketSentAt) {
+    return { type: "noop" };
+  }
   if (!booking.email.trim()) {
     return { type: "no-email", message: noEmailMessage(booking.contact) };
   }
@@ -257,6 +287,27 @@ export async function runRemind(
   await deps.saveReminder(deps.now);
   return {
     booking: { ...booking, reminderSentAt: deps.now },
+    sent: true,
+  };
+}
+
+export async function runResend(
+  booking: AdminBooking,
+  deps: {
+    now: string;
+    send: () => Promise<void>;
+    saveSent: (at: string) => Promise<void>;
+  },
+): Promise<{ booking: AdminBooking; message?: string; sent: boolean }> {
+  const plan = planResend(booking);
+  if (plan.type === "noop") return { booking, sent: false };
+  if (plan.type === "no-email") {
+    return { booking, message: plan.message, sent: false };
+  }
+  await deps.send();
+  await deps.saveSent(deps.now);
+  return {
+    booking: { ...booking, ticketSentAt: deps.now },
     sent: true,
   };
 }
