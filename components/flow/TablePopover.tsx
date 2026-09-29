@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
+import { SHOW_SEATED_FAMILIES } from "@/lib/config";
 import { TABLE_CAPACITY } from "@/lib/floorplan";
+import {
+  mapSeatedFamilies,
+  moreFamiliesLine,
+  seatedHereView,
+  type SeatedFamilyCard,
+} from "@/lib/seatedFamilies";
+import { getSupabaseClient } from "@/lib/supabase";
 import { TABLE_FULL_MESSAGE, canSelect, derive, dotRow } from "@/lib/seatMath";
 
 /**
@@ -34,7 +41,7 @@ type TablePopoverProps = {
 
 type LiveCount =
   | { state: "loading" }
-  | { state: "known"; booked: number }
+  | { state: "known"; booked: number; families: SeatedFamilyCard[] | null }
   | { state: "unknown" }; // live fetch failed and no fallback data
 
 export function TablePopover({
@@ -62,24 +69,40 @@ export function TablePopover({
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from("bookings")
-          .select("party_size")
+          .select(
+            SHOW_SEATED_FAMILIES
+              ? "party_size, students(name, preferred_name, family_name)"
+              : "party_size",
+          )
           .eq("table_no", tableNo)
           .neq("status", "cancelled");
         if (error) throw error;
         if (!active) return;
-        const { filled } = derive(
-          ((data ?? []) as { party_size: number }[]).map(
-            (row) => row.party_size,
-          ),
-        );
-        setLive({ state: "known", booked: filled });
+        const rows = (data ?? []) as {
+          party_size: number;
+          students?: {
+            name: string | null;
+            preferred_name: string | null;
+            family_name: string | null;
+          } | {
+            name: string | null;
+            preferred_name: string | null;
+            family_name: string | null;
+          }[] | null;
+        }[];
+        const { filled } = derive(rows.map((row) => row.party_size));
+        setLive({
+          state: "known",
+          booked: filled,
+          families: SHOW_SEATED_FAMILIES ? mapSeatedFamilies(rows) : null,
+        });
       } catch {
         if (!active) return;
         // Live refetch failed — fall back to the page-load count if we
         // have one, otherwise show the loading/unknown state.
         setLive(
           initialBooked !== null
-            ? { state: "known", booked: initialBooked }
+            ? { state: "known", booked: initialBooked, families: null }
             : { state: "unknown" },
         );
       }
@@ -166,6 +189,10 @@ export function TablePopover({
           ))}
         </div>
 
+        {live.state === "known" && live.families !== null && (
+          <SeatedHere families={live.families} />
+        )}
+
         {justSoldOut ? (
           <p className="mt-4 w-full rounded-[8px] border border-[rgba(224,147,125,0.35)] bg-[rgba(224,147,125,0.08)] px-3 py-[10px] text-[12px] leading-[1.5] text-[#e0937d]">
             {TABLE_FULL_MESSAGE}
@@ -198,5 +225,44 @@ export function TablePopover({
         )}
       </div>
     </>
+  );
+}
+
+function SeatedHere({ families }: { families: SeatedFamilyCard[] }) {
+  const view = seatedHereView(families, true);
+  if (view.kind === "hidden") return null;
+  if (view.kind === "empty") {
+    return (
+      <p className="mt-3 mb-[14px] text-[12px] text-[#77633a]">
+        No families seated yet — this table is all yours.
+      </p>
+    );
+  }
+  return (
+    <div className="mt-3 min-w-0">
+      <p className="mb-2 text-[10.5px] tracking-[0.1em] text-[#77633a]">
+        SEATED HERE
+      </p>
+      <div className="flex flex-col gap-[7px]">
+        {view.cards.map((card, index) => (
+          <div
+            key={`${card.label}-${index}`}
+            className="flex min-w-0 items-center justify-between rounded-[10px] border border-[#3a2f18] bg-[#241d0f] px-3 py-[9px]"
+          >
+            <p className="min-w-0 truncate text-[13px] font-medium text-[#d9bd6f]">
+              {card.label}
+            </p>
+            <p className="ml-2 shrink-0 text-[12px] text-[#9a7f3e]">
+              {card.seatsLabel}
+            </p>
+          </div>
+        ))}
+      </div>
+      {view.more > 0 && (
+        <p className="mt-[7px] text-[12px] text-[#77633a]">
+          {moreFamiliesLine(view.more)}
+        </p>
+      )}
+    </div>
   );
 }

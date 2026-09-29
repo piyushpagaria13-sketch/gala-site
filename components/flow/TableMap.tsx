@@ -11,6 +11,7 @@ import {
   TABLE_CAPACITY,
   type FloorTable,
 } from "@/lib/floorplan";
+import { SHOW_SEATED_FAMILIES } from "@/lib/config";
 import { getSupabaseClient } from "@/lib/supabase";
 
 /**
@@ -33,7 +34,7 @@ type TableState = "selected" | "available" | "soldout" | "blocked" | "unknown";
 
 // Popover geometry (px, matches TablePopover's sm: width).
 const POP_W = 272;
-const POP_H = 236;
+const POP_H = SHOW_SEATED_FAMILIES ? 400 : 236;
 const POP_GAP = 32;
 const POP_MARGIN = 8;
 

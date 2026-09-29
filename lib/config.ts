@@ -44,3 +44,8 @@ export const COMP_MODAL_COPY = {
  * Default is Option A: table only, one page per guest name.
  */
 export const SEAT_NUMBERS_ON_TICKETS = false;
+
+/**
+ * PA privacy decision pending — set false to hide family names on the map.
+ */
+export const SHOW_SEATED_FAMILIES = true;
