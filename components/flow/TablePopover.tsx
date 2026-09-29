@@ -67,18 +67,16 @@ export function TablePopover({
     (async () => {
       try {
         const supabase = getSupabaseClient();
+        // A single static select string — a ternary union of two literals
+        // makes supabase-js emit ParserError and fails `next build`.
         const { data, error } = await supabase
           .from("bookings")
-          .select(
-            SHOW_SEATED_FAMILIES
-              ? "party_size, students(name, preferred_name, family_name)"
-              : "party_size",
-          )
+          .select("party_size, students(name, preferred_name, family_name)")
           .eq("table_no", tableNo)
           .neq("status", "cancelled");
         if (error) throw error;
         if (!active) return;
-        const rows = (data ?? []) as {
+        const rows = (data ?? []) as unknown as {
           party_size: number;
           students?: {
             name: string | null;
