@@ -138,3 +138,25 @@ export async function matchStudent(query: string): Promise<Student | null> {
   const hits = rows.filter((row) => studentMatchesExact(row, trimmed));
   return hits.length === 1 ? hits[0] : null;
 }
+
+/**
+ * True when this class-list student already has a non-cancelled booking.
+ * Local seed ids never match live rows.
+ */
+export async function studentHasLiveBooking(studentId: string): Promise<boolean> {
+  const id = studentId.trim();
+  if (!id || id.startsWith("local:")) return false;
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("student_id", id)
+      .neq("status", "cancelled")
+      .limit(1);
+    if (error) return false;
+    return (data?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}

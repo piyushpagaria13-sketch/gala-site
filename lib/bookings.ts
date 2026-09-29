@@ -1,4 +1,6 @@
 import { TABLE_FULL_MESSAGE } from "./seatMath";
+import { NAME_ALREADY_BOOKED_MESSAGE } from "./studentBooking";
+import { studentHasLiveBooking } from "./students";
 import { getSupabaseClient } from "./supabase";
 import type { BookingStatus, Guest } from "@/lib/types";
 
@@ -39,6 +41,10 @@ export class BookingCapacityError extends Error {
 export async function createBooking(
   input: CreateBookingInput,
 ): Promise<CreatedBooking> {
+  if (input.studentId && (await studentHasLiveBooking(input.studentId))) {
+    throw new Error(NAME_ALREADY_BOOKED_MESSAGE);
+  }
+
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.rpc("create_booking", {
     p_table_no: input.tableNo,
@@ -62,6 +68,9 @@ export async function createBooking(
     const capacity = error.message.match(/capacity:(\d+)/);
     if (capacity) {
       throw new BookingCapacityError(Number(capacity[1]));
+    }
+    if (/name_already_booked/i.test(error.message)) {
+      throw new Error(NAME_ALREADY_BOOKED_MESSAGE);
     }
     throw error;
   }

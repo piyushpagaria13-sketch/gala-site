@@ -23,7 +23,10 @@ import {
     padTableGuests,
     TABLE_ROSTER_MESSAGE,
 } from "@/lib/guestRoster";
-import { matchStudent } from "@/lib/students";
+import { matchStudent, studentHasLiveBooking } from "@/lib/students";
+import { reviewCtaLabel } from "@/lib/confirmationCopy";
+import { payableSeats } from "@/lib/pricing";
+import { NAME_ALREADY_BOOKED_MESSAGE } from "@/lib/studentBooking";
 
 /** Close control for the confirmation step — stays in the header. */
 export function HeaderTrailing() {
@@ -78,7 +81,6 @@ export function ContinueDock() {
   const showAdd = step === "guests";
   const isTable = draft.type === "table";
   const addDisabled = !canAddGuestCard(roster);
-  const showAddStudent = showAdd && isTable;
 
   const addCard = (kind: "student" | "guest") => {
     const next = appendGuestCard(roster, kind);
@@ -105,18 +107,12 @@ export function ContinueDock() {
         }
       >
         {showAdd && (
-          <div
-            className={`mx-auto mb-3 grid w-full max-w-[612px] gap-4 ${
-              showAddStudent ? "grid-cols-2" : "grid-cols-1"
-            }`}
-          >
-            {showAddStudent && (
-              <AddGuestCard
-                label="Add student"
-                disabled={addDisabled}
-                onAdd={() => addCard("student")}
-              />
-            )}
+          <div className="mx-auto mb-3 grid w-full max-w-[612px] grid-cols-2 gap-4">
+            <AddGuestCard
+              label="Add student"
+              disabled={addDisabled}
+              onAdd={() => addCard("student")}
+            />
             <AddGuestCard
               label="Add guest"
               disabled={addDisabled}
@@ -170,6 +166,10 @@ export function ContinueButton() {
     step === "guests" || step === "review"
       ? isGuestRosterComplete(draft.type, rosterGuests, draft.partySize)
       : true;
+  const payable = payableSeats(
+    partySeatCount(draft),
+    draft.student?.compSeats ?? 0,
+  );
 
   const handleClick = async () => {
     if (compModalOpen) {
@@ -186,6 +186,10 @@ export function ContinueButton() {
         const match = await matchStudent(draft.student?.name ?? "");
         if (match) {
           setDraft({ ...draft, student: match });
+          if (await studentHasLiveBooking(match.id)) {
+            setError(NAME_ALREADY_BOOKED_MESSAGE);
+            return;
+          }
           if (match.compSeats > 0 && !compModalSeenIds.includes(match.id)) {
             markCompModalSeen(match.id);
             openCompModal(true);
@@ -272,7 +276,12 @@ export function ContinueButton() {
   };
 
   return (
-    <div className="relative">
+    <div className="flex flex-col items-center">
+      {error && (
+        <p className="mb-2 max-w-[22rem] text-center text-[13px] leading-snug text-[#e0937d]">
+          {error}
+        </p>
+      )}
       <button
         type="button"
         disabled={!stepValid || busy || !rosterReady}
@@ -282,14 +291,9 @@ export function ContinueButton() {
         {step === "review"
           ? busy
             ? "Booking…"
-            : "Confirm & pay"
+            : reviewCtaLabel(payable)
           : "Continue"}
       </button>
-      {error && (
-        <p className="absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 text-center text-[11px] text-[#e0937d]">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

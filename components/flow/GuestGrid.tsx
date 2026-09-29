@@ -23,8 +23,8 @@ function isStudent(guest: Guest, index: number): boolean {
 /**
  * "Who's coming?" A table starts with 10 cards; Add student / Add guest
  * stay visible but disabled until a card is deleted. Seats start with the
- * count chosen in "How many seats?", hide Add student, and keep Add guest
- * enabled so extra guests can join.
+ * count chosen in "How many seats?" and keep both add cards enabled so
+ * extra students or guests can join.
  */
 export function GuestGrid() {
   const { draft, setDraft, setStepValid } = useBookingDraft();

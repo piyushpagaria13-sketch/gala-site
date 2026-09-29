@@ -84,6 +84,15 @@ begin
     if not found then
       raise exception 'unknown student';
     end if;
+
+    if exists (
+      select 1
+      from bookings
+      where student_id = p_student_id
+        and status is distinct from 'cancelled'
+    ) then
+      raise exception 'name_already_booked';
+    end if;
   end if;
 
   v_payable := greatest(p_party_size - v_comp, 0);

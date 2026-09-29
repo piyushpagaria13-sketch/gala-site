@@ -4,6 +4,13 @@ import Image from "next/image";
 import { useState } from "react";
 import { sendBookingCopy } from "@/app/actions/sendBookingEmail";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
+import {
+  complimentaryTicketNote,
+  confirmationBadge,
+  confirmationSubtitle,
+  confirmationTone,
+  showPaymentProofBanner,
+} from "@/lib/confirmationCopy";
 
 /**
  * "You're booked!" — terminal screen after payment (or a fully complimentary
@@ -21,7 +28,12 @@ export function ConfirmationScreen() {
     .map((g) => g.name.trim())
     .filter(Boolean)
     .join(" · ");
-  const paid = draft.bookingStatus === "paid" || draft.amount === 0;
+  const tone = confirmationTone({
+    compSeats: draft.student?.compSeats ?? 0,
+    amount: draft.amount ?? 0,
+    bookingStatus: draft.bookingStatus,
+  });
+  const proofBanner = showPaymentProofBanner(tone);
 
   const handleSend = async () => {
     const trimmed = email.trim();
@@ -61,23 +73,27 @@ export function ConfirmationScreen() {
         You&apos;re booked!
       </h1>
       <p className="mt-2 text-center text-[15px] text-[#9a7f3e]">
-        {paid
-          ? "Your seats are reserved. No payment is due."
-          : "Your seats are reserved. Payment will be verified by your Grade Rep."}
+        {confirmationSubtitle(tone)}
       </p>
 
-      <div className="mt-4 flex w-full max-w-[480px] gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
-          !
-        </span>
-        <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">
-          Please share your screenshot on{" "}
-          <span className="text-[19px] font-black leading-none text-[#ffe56a]">
-            +6598193518
-          </span>{" "}
-          to receive the ticket.
+      {proofBanner ? (
+        <div className="mt-4 flex w-full max-w-[480px] gap-3 rounded-[12px] border-[0.5px] border-[#3a2f18] bg-[#100d07] px-4 py-[13px]">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[12px] bg-[#e5b52a] text-[14px] font-bold text-[#241a06]">
+            !
+          </span>
+          <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">
+            Please share your screenshot on{" "}
+            <span className="text-[19px] font-black leading-none text-[#ffe56a]">
+              +6598193518
+            </span>{" "}
+            to receive the ticket.
+          </p>
+        </div>
+      ) : (
+        <p className="mt-4 text-center text-[14px] text-[#9a7f3e]">
+          {complimentaryTicketNote()}
         </p>
-      </div>
+      )}
 
       <div className="mt-[26px] w-full max-w-[480px] rounded-card border border-[#6e5a2b] bg-[#1a1610] px-7 py-6">
         <div className="flex items-baseline justify-between">
@@ -98,7 +114,7 @@ export function ConfirmationScreen() {
         <div className="mt-[14px] h-px w-full bg-[#3a2f18]" />
         <p className="mt-3 text-[15px] text-[#d9bd6f]">{names}</p>
         <span className="mt-[14px] inline-block rounded-pill bg-[#3a2f18] px-3 py-1 text-[11px] font-medium tracking-[0.66px] text-[#c9a648]">
-          {paid ? "PAID" : "PAYMENT PENDING"}
+          {confirmationBadge(tone)}
         </span>
       </div>
 
