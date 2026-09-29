@@ -177,7 +177,7 @@ export function AdminConsole({
             </p>
           )}
           {visible.map((booking) => {
-            const actions = buttonState(booking.status);
+            const actions = buttonState(booking.status, booking.ticketSentAt);
             const phone = whatsAppHref(booking.contact);
             const stamps = [
               stamp("Ticket sent", booking.ticketSentAt),
@@ -243,7 +243,7 @@ export function AdminConsole({
                       }
                       className="rounded-pill bg-[#d4af37] px-3 py-1.5 text-[13px] font-semibold text-[#241a06] disabled:opacity-35"
                     >
-                      {booking.status === "paid"
+                      {booking.ticketSentAt
                         ? "Confirmed & sent"
                         : "Confirm & send ticket"}
                     </button>

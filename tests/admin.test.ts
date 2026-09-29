@@ -171,7 +171,7 @@ test("buttons follow status and cancelled rows are dimmed", () => {
     cancel: true,
     dimmed: false,
   });
-  assert.deepEqual(buttonState("paid"), {
+  assert.deepEqual(buttonState("paid", "2026-09-24T01:00:00.000Z"), {
     confirm: false,
     remind: false,
     cancel: false,
@@ -184,6 +184,39 @@ test("buttons follow status and cancelled rows are dimmed", () => {
     dimmed: true,
   });
   assert.equal(cancelCopy(booking()).refundNote, null);
+});
+
+test("a paid complimentary booking can still send the ticket until it is stamped", async () => {
+  assert.deepEqual(buttonState("paid", null), {
+    confirm: true,
+    remind: false,
+    cancel: false,
+    dimmed: false,
+  });
+  const complimentary = booking({
+    status: "paid",
+    amount: 0,
+    partySize: 2,
+    ticketSentAt: null,
+  });
+  assert.equal(planConfirm(complimentary).type, "send");
+  let sends = 0;
+  const first = await runConfirm(complimentary, {
+    now: "2026-09-24T01:00:00.000Z",
+    send: async () => {
+      sends += 1;
+    },
+    savePaid: async () => {},
+  });
+  assert.equal(sends, 1);
+  assert.equal(first.sent, true);
+  assert.equal(first.booking.ticketSentAt, "2026-09-24T01:00:00.000Z");
+  assert.deepEqual(buttonState(first.booking.status, first.booking.ticketSentAt), {
+    confirm: false,
+    remind: false,
+    cancel: false,
+    dimmed: false,
+  });
 });
 
 test("ticket email is the UWCSEA table layout with the logo and no QR", () => {

@@ -44,12 +44,20 @@ export type ButtonState = {
 export const REFUND_NOTE =
   "This booking was already paid — arrange the refund manually; cancelling here doesn't move money.";
 
-export function buttonState(status: AdminStatus): ButtonState {
+export function buttonState(
+  status: AdminStatus,
+  ticketSentAt: string | null = null,
+): ButtonState {
   if (status === "cancelled") {
     return { confirm: false, remind: false, cancel: false, dimmed: true };
   }
   if (status === "paid") {
-    return { confirm: false, remind: false, cancel: false, dimmed: false };
+    return {
+      confirm: !ticketSentAt,
+      remind: false,
+      cancel: false,
+      dimmed: false,
+    };
   }
   return { confirm: true, remind: true, cancel: true, dimmed: false };
 }
