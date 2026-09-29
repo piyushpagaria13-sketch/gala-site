@@ -188,9 +188,7 @@ export function AdminConsole({
             return (
               <article
                 key={booking.ref}
-                className={`grid grid-cols-1 gap-3 rounded-card border border-[#6e5a2b] bg-[#1a1610] px-4 py-4 transition-opacity duration-300 md:grid-cols-[1.1fr_1.1fr_1.5fr_auto_auto] md:items-start ${
-                  actions.dimmed ? "opacity-45" : "opacity-100"
-                }`}
+                className="grid grid-cols-1 gap-3 rounded-card border border-[#6e5a2b] bg-[#1a1610] px-4 py-4 md:grid-cols-[1.1fr_1.1fr_1.5fr_auto_auto] md:items-start"
               >
                 <div>
                   <p className="font-display text-[22px] text-[#e3c46a]">{booking.ref}</p>
@@ -249,7 +247,7 @@ export function AdminConsole({
                     </button>
                     <button
                       type="button"
-                      disabled={!actions.resend || busy !== null}
+                      disabled={busy !== null}
                       onClick={() =>
                         void callAction("/api/admin/resend", booking, (_next, exportError) =>
                           showToast(

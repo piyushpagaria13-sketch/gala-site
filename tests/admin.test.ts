@@ -163,14 +163,14 @@ test("a failed sheet export does not undo the cancel", async () => {
 test("buttons follow status and cancelled rows are dimmed", () => {
   assert.deepEqual(buttonState("awaiting_payment"), {
     confirm: true,
-    resend: false,
+    resend: true,
     remind: true,
     cancel: true,
     dimmed: false,
   });
   assert.deepEqual(buttonState("claims_paid"), {
     confirm: true,
-    resend: false,
+    resend: true,
     remind: true,
     cancel: true,
     dimmed: false,
@@ -184,7 +184,7 @@ test("buttons follow status and cancelled rows are dimmed", () => {
   });
   assert.deepEqual(buttonState("cancelled"), {
     confirm: false,
-    resend: false,
+    resend: true,
     remind: false,
     cancel: false,
     dimmed: true,
@@ -195,7 +195,7 @@ test("buttons follow status and cancelled rows are dimmed", () => {
 test("a paid complimentary booking can still send the ticket until it is stamped", async () => {
   assert.deepEqual(buttonState("paid", null), {
     confirm: true,
-    resend: false,
+    resend: true,
     remind: false,
     cancel: false,
     dimmed: false,
@@ -207,6 +207,7 @@ test("a paid complimentary booking can still send the ticket until it is stamped
     ticketSentAt: null,
   });
   assert.equal(planConfirm(complimentary).type, "send");
+  assert.equal(planResend(complimentary).type, "send");
   let sends = 0;
   const first = await runConfirm(complimentary, {
     now: "2026-09-24T01:00:00.000Z",
@@ -227,27 +228,31 @@ test("a paid complimentary booking can still send the ticket until it is stamped
   });
 });
 
-test("resend is a no-op until the first ticket send, then sends again", async () => {
+test("resend sends even before the first confirm", async () => {
   const unpaid = booking();
-  assert.equal(planResend(unpaid).type, "noop");
-  const skipped = await runResend(unpaid, {
+  assert.equal(planResend(unpaid).type, "send");
+  let sends = 0;
+  let saved = "";
+  const first = await runResend(unpaid, {
     now: "2026-09-24T02:00:00.000Z",
     send: async () => {
-      throw new Error("should not send before the first ticket");
+      sends += 1;
     },
-    saveSent: async () => {
-      throw new Error("should not save before the first ticket");
+    saveSent: async (at) => {
+      saved = at;
     },
   });
-  assert.equal(skipped.sent, false);
+  assert.equal(sends, 1);
+  assert.equal(saved, "2026-09-24T02:00:00.000Z");
+  assert.equal(first.sent, true);
+  assert.equal(first.booking.status, "awaiting_payment");
+  assert.equal(first.booking.ticketSentAt, "2026-09-24T02:00:00.000Z");
 
   const stamped = booking({
     status: "paid",
     ticketSentAt: "2026-09-24T01:00:00.000Z",
   });
   assert.equal(planResend(stamped).type, "send");
-  let sends = 0;
-  let saved = "";
   const resent = await runResend(stamped, {
     now: "2026-09-24T03:00:00.000Z",
     send: async () => {
@@ -257,7 +262,7 @@ test("resend is a no-op until the first ticket send, then sends again", async ()
       saved = at;
     },
   });
-  assert.equal(sends, 1);
+  assert.equal(sends, 2);
   assert.equal(saved, "2026-09-24T03:00:00.000Z");
   assert.equal(resent.sent, true);
   assert.equal(resent.booking.ticketSentAt, "2026-09-24T03:00:00.000Z");

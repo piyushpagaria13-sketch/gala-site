@@ -53,7 +53,7 @@ export function buttonState(
   if (status === "cancelled") {
     return {
       confirm: false,
-      resend: false,
+      resend: true,
       remind: false,
       cancel: false,
       dimmed: true,
@@ -62,7 +62,7 @@ export function buttonState(
   if (status === "paid") {
     return {
       confirm: !sent,
-      resend: sent,
+      resend: true,
       remind: false,
       cancel: false,
       dimmed: false,
@@ -70,7 +70,7 @@ export function buttonState(
   }
   return {
     confirm: !sent,
-    resend: sent,
+    resend: true,
     remind: true,
     cancel: true,
     dimmed: false,
@@ -152,9 +152,6 @@ export type ResendPlan =
   | { type: "send" };
 
 export function planResend(booking: AdminBooking): ResendPlan {
-  if (booking.status === "cancelled" || !booking.ticketSentAt) {
-    return { type: "noop" };
-  }
   if (!booking.email.trim()) {
     return { type: "no-email", message: noEmailMessage(booking.contact) };
   }
