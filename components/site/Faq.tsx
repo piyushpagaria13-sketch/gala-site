@@ -29,8 +29,15 @@ const FAQ_ITEMS = [
   },
   {
     question: "Who do I book under?",
-    answer:
-      "Every booking is made under the graduating student's name. Start typing their name on the booking page and select it. Family and the graduate themselves are then added as guests within that one booking.",
+    answer: (
+      <>
+        Every booking is made under the graduating students names. Start typing
+        their name on the booking page and select it. FAMILY and the graduate
+        themselves are then added. The payment{" "}
+        <strong className="font-bold">must</strong> come from the{" "}
+        <strong className="font-bold">parent</strong> of the graduating student.
+      </>
+    ),
   },
   {
     question: "Can we choose our table and sit with friends?",
@@ -51,14 +58,15 @@ const FAQ_ITEMS = [
     question: "How do I pay?",
     answer: (
       <>
-        By PayNow. After confirming your seats you&apos;ll see a QR code and a
-        booking reference GALA27. Add the reference GALA27 to your transfer so
-        the PA can match your payment.{" "}
+        By PayNow by a parent of the graduate. After confirming your seats, you
+        will see a QR code and a booking reference number. You must add the
+        reference number to your transfer, so that the committee can match your
+        payment.{" "}
         <strong className="font-bold">
-          Remember to get a screenshot of your payment.
-        </strong>{" "}
-        Your bookings will be confirmed upon verification of your payment via
-        the uploaded screenshot.
+          Remember to get a screenshot of your payment
+        </strong>
+        . Your bookings will be confirmed upon verification of your payment via
+        the uploaded screenshots.
       </>
     ),
   },
