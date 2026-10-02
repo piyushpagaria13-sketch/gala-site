@@ -326,6 +326,7 @@ test("ticket email is the UWCSEA table layout with the logo and no QR", () => {
   assert.match(html, /isn't monitored/);
   assert.match(html, /mailto:Padovergraduation@gapps\.uwcsea\.edu\.sg/i);
   assert.doesNotMatch(html, /QR code/i);
+  assert.doesNotMatch(html, /cid:paynow-qr/);
   assert.doesNotMatch(html, /<button/i);
   assert.doesNotMatch(html, /supabase/i);
   assert.doesNotMatch(html, /href="https?:\/\//i);

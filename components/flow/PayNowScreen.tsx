@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal } from "@/lib/pricing";
 
 /**
  * "Pay using PayNow" — shown after Confirm & pay when there is a payable
- * total. QR card with the amount and the GALA reference, then "I've paid".
+ * total. Real PayNow QR, amount, GALA reference, then "I've paid".
  */
 export function PayNowScreen() {
   const { draft, goNext } = useBookingDraft();
@@ -21,6 +22,10 @@ export function PayNowScreen() {
       <h1 className="mt-3 shrink-0 text-center font-display text-[30px] font-medium leading-none text-[#e3c46a]">
         Pay using PayNow
       </h1>
+      <p className="mt-3 max-w-[480px] shrink-0 text-center text-[15px] leading-[1.45] text-[#e8d9a8]">
+        Payments must come from the parent of a graduating student. This is for
+        governance purposes
+      </p>
 
       <PayNote className="mt-3 max-w-[480px] shrink-0">
         <span className="text-[21px] font-bold leading-[1.3]">
@@ -34,15 +39,14 @@ export function PayNowScreen() {
         </p>
 
         <div className="mt-3 flex w-full items-center justify-center">
-          <div className="relative h-[200px] w-[200px] overflow-clip rounded-[12px] bg-[#fffdf8]">
-            <PlaceholderQr />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-[#fffdf8] px-2 py-1 text-center text-[16px] font-bold leading-[normal] tracking-[0.64px] text-[#7b1f8a]">
-                PAY
-                <br />
-                NOW
-              </div>
-            </div>
+          <div className="relative h-[200px] w-[200px] overflow-clip rounded-[12px] bg-white">
+            <Image
+              src="/book/paynow-qr.png"
+              alt="PayNow QR code"
+              width={300}
+              height={300}
+              className="h-full w-full object-contain"
+            />
           </div>
         </div>
 
@@ -87,30 +91,5 @@ function PayNote({
       </span>
       <p className="text-[14px] leading-[1.5] text-[#9a7f3e]">{children}</p>
     </div>
-  );
-}
-
-function PlaceholderQr() {
-  const cells: { x: number; y: number }[] = [];
-  let seed = 7;
-  for (let row = 0; row < 25; row++) {
-    for (let col = 0; col < 25; col++) {
-      if (row >= 9 && row <= 15 && col >= 8 && col <= 16) continue;
-      seed = (seed * 1103515245 + 12345) % 2147483648;
-      if (seed / 2147483648 < 0.42) {
-        cells.push({ x: 12 + col * 8, y: 12 + row * 8 });
-      }
-    }
-  }
-  return (
-    <svg
-      viewBox="0 0 224 224"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden
-    >
-      {cells.map((c, i) => (
-        <rect key={i} x={c.x} y={c.y} width="8" height="8" fill="#7b1f8a" />
-      ))}
-    </svg>
   );
 }

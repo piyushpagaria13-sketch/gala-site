@@ -21,6 +21,7 @@ import {
   bookingReceivedHtml,
   bookingReceivedSubject,
   bookingReceivedText,
+  PAYNOW_QR_CID,
 } from "@/lib/bookingReceived";
 
 function withFooter(
@@ -141,6 +142,23 @@ export async function sendCancellationEmail(booking: AdminBooking): Promise<void
   });
 }
 
+async function paynowQrAttachment(): Promise<{
+  filename: string;
+  content: string;
+  content_type: string;
+  content_id: string;
+}> {
+  const bytes = await readFile(
+    path.join(process.cwd(), "public", "book", "paynow-qr.png"),
+  );
+  return {
+    filename: "paynow-qr.png",
+    content: Buffer.from(bytes).toString("base64"),
+    content_type: "image/png",
+    content_id: PAYNOW_QR_CID,
+  };
+}
+
 export async function sendBookingReceivedEmail(input: {
   to: string;
   ref: string;
@@ -154,10 +172,12 @@ export async function sendBookingReceivedEmail(input: {
     partySize: input.partySize,
     guests: input.guests,
   };
+  const qr = await paynowQrAttachment();
   await sendResend({
     to: input.to,
     subject: bookingReceivedSubject(),
     html: bookingReceivedHtml(payload),
     text: bookingReceivedText(payload),
+    attachments: [qr],
   });
 }

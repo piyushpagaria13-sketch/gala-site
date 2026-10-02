@@ -20,7 +20,7 @@ const FAQ_ITEMS = [
   {
     question: "Who organises the Gala?",
     answer:
-      "The class of 2027 Grade Reps and the graduation committee in association with the PA.",
+      "The class of 2027 grade coordinators and the graduation committee is organising this gala.",
   },
   {
     question: "How much are tickets?",
@@ -177,12 +177,13 @@ export function Faq() {
       </div>
 
       <p className="mt-8 px-4 text-center text-[14px] text-[#8fa0bd]">
-        Still have a question? Your Grade Rep is the fastest route — or email{" "}
+        Still have questions? Getting in touch with your grade coordinators is
+        the fastest route or email{" "}
         <a
-          href="mailto:Padovergraduation@gapps.uwcsea.edu.sg"
+          href="mailto:padovergraduation@gapps.uwcsea.edu.sg"
           className="text-gold underline [text-underline-position:from-font]"
         >
-          Padovergraduation@gapps.uwcsea.edu.sg
+          padovergraduation@gapps.uwcsea.edu.sg
         </a>
       </p>
     </section>
