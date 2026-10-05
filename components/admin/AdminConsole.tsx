@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   buttonState,
   cancelCopy,
+  clearCopy,
   guestSummary,
   whatsAppHref,
   type AdminBooking,
@@ -48,7 +49,9 @@ export function AdminConsole({
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pendingCancel, setPendingCancel] = useState<AdminBooking | null>(null);
+  const [pendingClear, setPendingClear] = useState(false);
   const [inlineNote, setInlineNote] = useState<Record<string, string>>({});
+  const wipeCopy = clearCopy();
 
   const visible = useMemo(() => {
     const list = filter === "all" ? rows : rows.filter((row) => row.status === filter);
@@ -107,6 +110,33 @@ export function AdminConsole({
     }
   };
 
+  const clearAll = async () => {
+    setBusy("clear");
+    try {
+      const response = await fetch("/api/admin/clear", { method: "POST" });
+      const body = (await response.json()) as {
+        error?: string;
+        syncedAt?: string;
+        exportError?: string;
+      };
+      if (!response.ok) {
+        showToast(body.error ?? "Clear failed");
+        return;
+      }
+      setRows([]);
+      if (body.syncedAt) setSyncedAt(body.syncedAt);
+      showToast(
+        body.exportError
+          ? "Bookings cleared. The Sheet did not update."
+          : "Bookings and Sheet cleared",
+      );
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Clear failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const reexport = async () => {
     setBusy("export");
     try {
@@ -143,14 +173,24 @@ export function AdminConsole({
               {active.length} bookings · {seats} seats booked
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void reexport()}
-            disabled={busy === "export"}
-            className="rounded-pill border border-[#d4af37] px-4 py-2 text-[14px] font-semibold text-[#e3c46a] disabled:opacity-40"
-          >
-            ↻ Re-export Sheet
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void reexport()}
+              disabled={busy !== null}
+              className="rounded-pill border border-[#d4af37] px-4 py-2 text-[14px] font-semibold text-[#e3c46a] disabled:opacity-40"
+            >
+              ↻ Re-export Sheet
+            </button>
+            <button
+              type="button"
+              onClick={() => setPendingClear(true)}
+              disabled={busy !== null}
+              className="rounded-pill border border-[#e0937d] px-4 py-2 text-[14px] font-semibold text-[#e0937d] disabled:opacity-40"
+            >
+              Clear
+            </button>
+          </div>
         </header>
 
         <div className="flex flex-wrap gap-2">
@@ -334,6 +374,46 @@ export function AdminConsole({
           })}
         </div>
       </div>
+      {pendingClear && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clear-dialog-title"
+            className="w-full max-w-[460px] rounded-card-lg border border-[rgba(212,175,55,0.4)] bg-[#1c1710] px-7 py-7"
+          >
+            <h2
+              id="clear-dialog-title"
+              className="font-display text-[24px] text-[#e3c46a]"
+            >
+              {wipeCopy.title}
+            </h2>
+            <p className="mt-3 text-[15px] text-[#e8d9a8]">{wipeCopy.line}</p>
+            <p className="mt-3 text-[14px] leading-relaxed text-[#9a7f3e]">
+              {wipeCopy.body}
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingClear(false)}
+                className="rounded-[12px] border border-[#8a6f35] px-4 py-2 text-[15px] text-[#e8d9a8]"
+              >
+                Keep bookings
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingClear(false);
+                  void clearAll();
+                }}
+                className="rounded-[12px] bg-[#e0937d] px-4 py-2 text-[15px] font-semibold text-[#241a06]"
+              >
+                Yes, clear everything
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && (
         <p className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-pill bg-[#1a1610] px-5 py-3 text-[14px] text-[#e3c46a] shadow-lg">
           {toast}

@@ -7,8 +7,8 @@ import { getSupabaseServiceClient } from "@/lib/supabase";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Save the address, send the booking-received note, then mark the sheet Email column Sent.
- * The address is stored on the booking. The sheet only shows "Sent".
+ * Save the address, send the booking-received note, then rewrite the sheet
+ * so the Email column shows the address from the first booking page.
  */
 export async function sendBookingCopy(
   ref: string,

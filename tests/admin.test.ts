@@ -7,6 +7,7 @@ import {
   REFUND_NOTE,
   buttonState,
   cancelCopy,
+  clearCopy,
   cancellationText,
   planConfirm,
   planResend,
@@ -347,4 +348,11 @@ test("cancellation email says the seats are released", () => {
     text,
     "Your booking has been cancelled and the seats have been released for booking again!",
   );
+});
+
+test("clear confirmation says the sheet and bookings will be emptied", () => {
+  const copy = clearCopy();
+  assert.equal(copy.title, "Clear all bookings?");
+  assert.match(copy.line, /Google Sheet/);
+  assert.match(copy.body, /cannot be undone/i);
 });

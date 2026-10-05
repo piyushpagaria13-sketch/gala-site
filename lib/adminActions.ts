@@ -117,3 +117,23 @@ export async function cancelBooking(ref: string): Promise<AdminActionResult> {
   const fresh = (await loadAdminBooking(ref)) ?? result.booking;
   return { ok: true, booking: fresh, exportError: result.exportError, emailError };
 }
+
+/** Delete every booking and guest, then rewrite the Sheet from the empty tables. */
+export async function clearAllBookings(): Promise<{
+  ok: boolean;
+  exportError?: string;
+}> {
+  const supabase = getSupabaseServiceClient();
+  const { error: guestError } = await supabase
+    .from("guests")
+    .delete()
+    .not("id", "is", null);
+  if (guestError) throw guestError;
+  const { error: bookingError } = await supabase
+    .from("bookings")
+    .delete()
+    .not("id", "is", null);
+  if (bookingError) throw bookingError;
+  const exportError = await exportAfterSave();
+  return { ok: true, exportError };
+}

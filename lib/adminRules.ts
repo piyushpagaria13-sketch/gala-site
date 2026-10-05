@@ -106,6 +106,18 @@ export function seatsFilled(
     .reduce((sum, row) => sum + row.partySize, 0);
 }
 
+export function clearCopy(): {
+  title: string;
+  line: string;
+  body: string;
+} {
+  return {
+    title: "Clear all bookings?",
+    line: "This empties the admin list and the Google Sheet.",
+    body: "Every booking and guest row will be deleted. Students and tables stay. This cannot be undone.",
+  };
+}
+
 export function cancelCopy(booking: AdminBooking): {
   title: string;
   line: string;

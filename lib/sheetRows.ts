@@ -23,7 +23,7 @@ export type MirrorBooking = {
   contact: string;
   status: string;
   amount: number;
-  /** Set once the guest asks for a copy. The sheet shows "Sent", not the address. */
+  /** Contact email from the first booking page. */
   email: string;
   guests: MirrorGuest[];
 };
@@ -104,7 +104,7 @@ export function bookingsTab(snapshot: SheetSnapshot): string[][] {
       booking.contact,
       booking.status,
       String(booking.amount),
-      booking.email ? "Sent" : "",
+      booking.email,
     ]),
   );
   return [BOOKINGS_HEADER, ...rows];

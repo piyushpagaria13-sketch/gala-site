@@ -34,7 +34,7 @@ function aryanBooking(status = "awaiting_payment"): MirrorBooking {
     cars: 1,
     busSeats: 2,
     contact: "+65 8111 0000",
-    email: "",
+    email: "parent@example.com",
     status,
     amount: AMOUNT,
     guests: [
@@ -128,10 +128,10 @@ test("comp booking rewrites Bookings rows and a 4/10 table section", async () =>
     assert.equal(row[11], "+65 8111 0000");
     assert.equal(row[12], "awaiting_payment");
     assert.equal(row[13], String(AMOUNT));
-    assert.equal(row[14], "");
+    assert.equal(row[14], "parent@example.com");
   }
-  const sent = await run({ ...aryanBooking(), email: "guest@example.com" });
-  assert.equal(sent[0].rows[1][14], "Sent");
+  const blank = await run({ ...aryanBooking(), email: "" });
+  assert.equal(blank[0].rows[1][14], "");
   assert.equal(bookings[1][4], "Guest One");
   assert.equal(bookings[1][5], "");
   assert.equal(bookings[1][7], "Chicken");

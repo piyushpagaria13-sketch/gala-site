@@ -14,7 +14,7 @@ import {
 
 /**
  * "You're booked!" — terminal screen after payment (or a fully complimentary
- * booking). Send stores the address, emails a copy, and marks the sheet Sent.
+ * booking). Send stores the address and emails a copy.
  */
 export function ConfirmationScreen() {
   const { draft, setDraft } = useBookingDraft();
