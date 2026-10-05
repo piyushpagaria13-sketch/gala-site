@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { SHOW_PAYNOW_QR } from "@/lib/bookingReceived";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal } from "@/lib/pricing";
 
 /**
  * "Pay using PayNow" — shown after Confirm & pay when there is a payable
- * total. Real PayNow QR, amount, GALA reference, then "I've paid".
+ * total. Amount, GALA reference, then "I've paid". QR is gated off for now.
  */
 export function PayNowScreen() {
   const { draft, goNext } = useBookingDraft();
@@ -34,23 +35,28 @@ export function PayNowScreen() {
       </PayNote>
 
       <div className="mt-6 flex w-full max-w-[480px] flex-col items-center rounded-card border border-[#6e5a2b] bg-[#1a1610] px-7 py-4">
-        <p className="shrink-0 text-[15px] text-[#e8d9a8]">
-          Scan this QR code with your banking app
+        {SHOW_PAYNOW_QR ? (
+          <>
+            <p className="shrink-0 text-[15px] text-[#e8d9a8]">
+              Scan this QR code with your banking app
+            </p>
+            <div className="mt-3 flex w-full items-center justify-center">
+              <div className="relative h-[200px] w-[200px] overflow-clip rounded-[12px] bg-white">
+                <Image
+                  src="/book/paynow-qr.png"
+                  alt="PayNow QR code"
+                  width={300}
+                  height={300}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        <p className={`${SHOW_PAYNOW_QR ? "mt-3" : ""} shrink-0 text-[13px] text-[#9a7f3e]`}>
+          Amount
         </p>
-
-        <div className="mt-3 flex w-full items-center justify-center">
-          <div className="relative h-[200px] w-[200px] overflow-clip rounded-[12px] bg-white">
-            <Image
-              src="/book/paynow-qr.png"
-              alt="PayNow QR code"
-              width={300}
-              height={300}
-              className="h-full w-full object-contain"
-            />
-          </div>
-        </div>
-
-        <p className="mt-3 shrink-0 text-[13px] text-[#9a7f3e]">Amount</p>
         <p className="mt-0.5 shrink-0 font-display text-[34px] font-medium leading-none text-[#e3c46a]">
           S${total}.00
         </p>

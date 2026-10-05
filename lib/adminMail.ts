@@ -22,6 +22,7 @@ import {
   bookingReceivedSubject,
   bookingReceivedText,
   PAYNOW_QR_CID,
+  SHOW_PAYNOW_QR,
 } from "@/lib/bookingReceived";
 
 function withFooter(
@@ -172,12 +173,12 @@ export async function sendBookingReceivedEmail(input: {
     partySize: input.partySize,
     guests: input.guests,
   };
-  const qr = await paynowQrAttachment();
+  const qr = SHOW_PAYNOW_QR ? await paynowQrAttachment() : null;
   await sendResend({
     to: input.to,
     subject: bookingReceivedSubject(),
     html: bookingReceivedHtml(payload),
     text: bookingReceivedText(payload),
-    attachments: [qr],
+    attachments: qr ? [qr] : undefined,
   });
 }

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { BusModal } from "@/components/flow/BusModal";
+import { SHOW_PAYNOW_QR } from "@/lib/bookingReceived";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
 import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
 
@@ -139,7 +140,9 @@ export function ReviewScreen() {
             <p className="text-[13px] leading-[1.5] text-[#9a7f3e]">
               {payable === 0
                 ? "Nothing to pay — complimentary seats cover this booking."
-                : "Pay via PayNow, QR on the next step. Your seats are held while the confirmation of payment is cross-checked."}
+                : SHOW_PAYNOW_QR
+                  ? "Pay via PayNow, QR on the next step. Your seats are held while the confirmation of payment is cross-checked."
+                  : "Pay via PayNow on the next step. Your seats are held while the confirmation of payment is cross-checked."}
             </p>
           </div>
         </div>
