@@ -104,7 +104,7 @@ export function BusModal({
       onClose={onClose}
       titleId="bus-dialog-title"
       title="Shuttle bus"
-      description="Runs between Dover campus and the ballroom before and after the gala."
+      description="The shuttle bus will take you from NUS to the venue"
       fieldLabel="Bus seats"
       saved={draft.busSeats}
       onSave={(busSeats) => setDraft({ ...draft, busSeats })}
