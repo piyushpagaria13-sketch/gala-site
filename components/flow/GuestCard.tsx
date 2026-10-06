@@ -216,7 +216,7 @@ export function GuestCard({
           htmlFor={`${id}-age`}
           className="text-[15px] leading-[1.4] text-[#e3c46a]"
         >
-          Are you 18 years old or above
+          Are you 18 years old or above on 22/05/27?
         </label>
         <button
           id={`${id}-age`}
