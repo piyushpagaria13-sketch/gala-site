@@ -25,13 +25,13 @@ test("booking-received auto-reply uses the pending-confirmation copy", () => {
     /Look out for another email with confirmation of your tickets/,
   );
   assert.match(text, /The graduation committee/);
-  assert.doesNotMatch(text, /Scan the PayNow QR in this email/);
+  assert.match(text, /Scan the PayNow QR in this email/);
   const html = bookingReceivedHtml({
     ref: "GALA-0231",
     tableNo: 23,
     partySize: 3,
     guests: ["Aryan Tan", "Priya Tan", "Rajesh Tan"],
   });
-  assert.doesNotMatch(html, /cid:paynow-qr/);
-  assert.doesNotMatch(html, /alt="PayNow QR code"/);
+  assert.match(html, /src="cid:paynow-qr"/);
+  assert.match(html, /alt="PayNow QR code"/);
 });

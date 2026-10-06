@@ -9,8 +9,8 @@ export type BookingReceivedInput = {
 
 export const PAYNOW_QR_CID = "paynow-qr";
 
-/** Flip back to true when PayNow should show the QR again. */
-export const SHOW_PAYNOW_QR = false;
+/** Shown on the PayNow screen and in the booking auto-reply. */
+export const SHOW_PAYNOW_QR = true;
 
 export function bookingReceivedSubject(): string {
   return "We've received your booking request! (Pending Confirmation)";

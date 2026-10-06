@@ -8,7 +8,7 @@ import { bookingTotal } from "@/lib/pricing";
 
 /**
  * "Pay using PayNow" — shown after Confirm & pay when there is a payable
- * total. Amount, GALA reference, then "I've paid". QR is gated off for now.
+ * total. PayNow QR, amount, GALA reference, then "I've paid".
  */
 export function PayNowScreen() {
   const { draft, goNext } = useBookingDraft();
