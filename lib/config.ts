@@ -36,7 +36,7 @@ export function emailFooterHtml(): string {
  */
 export const COMP_MODAL_COPY = {
   title: "Complimentary seats included",
-  body: "This student's booking includes complimentary tickets, courtesy of the PA.",
+  body: "Your ticket is complimentary. For the ONE parent complimentary ticket please share the screenshot of the booking with the graduation committee @ padovergraduation@gapps.uwcsea.edu.sg",
 };
 
 /**
