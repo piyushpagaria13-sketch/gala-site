@@ -79,11 +79,13 @@ begin
       raise exception 'unknown student';
     end if;
 
-    if exists (
-      select 1
-      from bookings
-      where student_id = p_student_id
-        and status is distinct from 'cancelled'
+    if (
+      (
+        select count(*)
+        from bookings
+        where student_id = p_student_id
+          and status is distinct from 'cancelled'
+      ) >= 2
     ) then
       raise exception 'name_already_booked';
     end if;

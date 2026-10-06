@@ -10,6 +10,8 @@
 --    (ignores any client-sent price)
 -- 6. insert booking + guests; status paid and amount 0 when nothing is payable
 -- 7. generate ref GALA-NNNN and return it
+-- 8. at most two live (non-cancelled) bookings per student; a third
+--    raises name_already_booked
 
 create or replace function create_booking(
   p_table_no integer,
@@ -85,11 +87,13 @@ begin
       raise exception 'unknown student';
     end if;
 
-    if exists (
-      select 1
-      from bookings
-      where student_id = p_student_id
-        and status is distinct from 'cancelled'
+    if (
+      (
+        select count(*)
+        from bookings
+        where student_id = p_student_id
+          and status is distinct from 'cancelled'
+      ) >= 2
     ) then
       raise exception 'name_already_booked';
     end if;
