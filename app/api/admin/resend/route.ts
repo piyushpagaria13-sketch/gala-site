@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { resendTicket } from "@/lib/adminActions";
 import { readRef, requireAdmin } from "@/lib/adminRequest";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;

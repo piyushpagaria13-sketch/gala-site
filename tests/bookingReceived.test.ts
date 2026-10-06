@@ -34,4 +34,16 @@ test("booking-received auto-reply uses the pending-confirmation copy", () => {
   });
   assert.match(html, /src="cid:paynow-qr"/);
   assert.match(html, /alt="PayNow QR code"/);
+  assert.doesNotMatch(
+    bookingReceivedHtml(
+      {
+        ref: "GALA-0231",
+        tableNo: 23,
+        partySize: 3,
+        guests: ["Aryan Tan"],
+      },
+      { includeQr: false },
+    ),
+    /cid:paynow-qr/,
+  );
 });

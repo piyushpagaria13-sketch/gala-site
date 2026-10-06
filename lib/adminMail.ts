@@ -173,12 +173,19 @@ export async function sendBookingReceivedEmail(input: {
     partySize: input.partySize,
     guests: input.guests,
   };
-  const qr = SHOW_PAYNOW_QR ? await paynowQrAttachment() : null;
+  let qr: Awaited<ReturnType<typeof paynowQrAttachment>> | null = null;
+  if (SHOW_PAYNOW_QR) {
+    try {
+      qr = await paynowQrAttachment();
+    } catch (error) {
+      console.error("PayNow QR missing from the server bundle; sending without it", error);
+    }
+  }
   await sendResend({
     to: input.to,
     subject: bookingReceivedSubject(),
-    html: bookingReceivedHtml(payload),
-    text: bookingReceivedText(payload),
+    html: bookingReceivedHtml(payload, { includeQr: Boolean(qr) }),
+    text: bookingReceivedText(payload, { includeQr: Boolean(qr) }),
     attachments: qr ? [qr] : undefined,
   });
 }

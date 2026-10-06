@@ -72,18 +72,25 @@ export function AdminConsole({
     );
   };
 
+  const headerBusy = busy === "clear" || busy === "export";
+  const rowBusy = (ref: string) =>
+    headerBusy || Boolean(busy && busy.startsWith(`${ref}::`));
+
   const callAction = async (
     path: string,
     booking: AdminBooking,
     success: (next: AdminBooking, exportError?: string, emailError?: string) => void,
   ) => {
-    setBusy(booking.ref + path);
+    setBusy(`${booking.ref}::${path}`);
     setInlineNote((notes) => ({ ...notes, [booking.ref]: "" }));
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 50_000);
     try {
       const response = await fetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ref: booking.ref }),
+        signal: controller.signal,
       });
       const body = (await response.json()) as {
         error?: string;
@@ -104,8 +111,18 @@ export function AdminConsole({
       }
       if (body.booking) success(body.booking, body.exportError, body.emailError);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Something went wrong");
+      const aborted =
+        (error instanceof DOMException && error.name === "AbortError") ||
+        (error instanceof Error && error.name === "AbortError");
+      showToast(
+        aborted
+          ? "That took too long. Try again."
+          : error instanceof Error
+            ? error.message
+            : "Something went wrong",
+      );
     } finally {
+      window.clearTimeout(timer);
       setBusy(null);
     }
   };
@@ -177,7 +194,7 @@ export function AdminConsole({
             <button
               type="button"
               onClick={() => void reexport()}
-              disabled={busy !== null}
+              disabled={headerBusy}
               className="rounded-pill border border-[#d4af37] px-4 py-2 text-[14px] font-semibold text-[#e3c46a] disabled:opacity-40"
             >
               ↻ Re-export Sheet
@@ -185,7 +202,7 @@ export function AdminConsole({
             <button
               type="button"
               onClick={() => setPendingClear(true)}
-              disabled={busy !== null}
+              disabled={headerBusy}
               className="rounded-pill border border-[#e0937d] px-4 py-2 text-[14px] font-semibold text-[#e0937d] disabled:opacity-40"
             >
               Clear
@@ -269,7 +286,7 @@ export function AdminConsole({
                   <div className="mt-1 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      disabled={!actions.confirm || busy !== null}
+                      disabled={!actions.confirm || rowBusy(booking.ref)}
                       onClick={() =>
                         void callAction("/api/admin/confirm", booking, (_next, exportError) =>
                           showToast(
@@ -287,7 +304,7 @@ export function AdminConsole({
                     </button>
                     <button
                       type="button"
-                      disabled={busy !== null}
+                      disabled={rowBusy(booking.ref)}
                       onClick={() =>
                         void callAction("/api/admin/resend", booking, (_next, exportError) =>
                           showToast(
@@ -303,7 +320,7 @@ export function AdminConsole({
                     </button>
                     <button
                       type="button"
-                      disabled={!actions.remind || busy !== null}
+                      disabled={!actions.remind || rowBusy(booking.ref)}
                       onClick={() =>
                         void callAction("/api/admin/remind", booking, () =>
                           showToast(`Reminder sent for ${booking.ref}`),
@@ -315,7 +332,7 @@ export function AdminConsole({
                     </button>
                     <button
                       type="button"
-                      disabled={!actions.cancel || busy !== null}
+                      disabled={!actions.cancel || rowBusy(booking.ref)}
                       onClick={() => setPendingCancel(booking)}
                       className="rounded-pill border border-[#e0937d] px-3 py-1.5 text-[13px] font-semibold text-[#e0937d] disabled:opacity-35"
                     >
