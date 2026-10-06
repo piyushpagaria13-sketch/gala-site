@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { padTableGuests, padSeatGuests, startingGuestCards, isGuestRosterComplete, duplicateStudentIndexes, trimTrailingBlankGuests, canAddGuestCard, appendGuestCard } from "../lib/guestRoster.ts";
+import { padTableGuests, padSeatGuests, startingGuestCards, isGuestRosterComplete, duplicateStudentIndexes, trimTrailingBlankGuests, canAddGuestCard, canDeleteCard, appendGuestCard, removeCard } from "../lib/guestRoster.ts";
 
 test("a table booking is always 10 cards", () => {
   const empty = padTableGuests([], "Ada Tan");
@@ -180,6 +180,56 @@ test("a guest cannot reuse a student already on a student card", () => {
   ];
   assert.deepEqual(duplicateStudentIndexes(mixed), [1]);
   assert.equal(isGuestRosterComplete("seats", mixed), false);
+});
+
+test("every student and guest card can be deleted without changing the others", () => {
+  const roster = [
+    { name: "Ada Tan", kind: "student" as const, dietary: "Chicken" },
+    {
+      name: "Pat Tan",
+      kind: "guest" as const,
+      graduatingStudent: "Ada Tan",
+      title: "Others",
+      dietary: "Fish",
+    },
+    { name: "Jo Tan", kind: "student" as const, dietary: "Vegetarian" },
+  ];
+  assert.equal(canDeleteCard(), true);
+  const withoutExtraStudent = removeCard(roster, 2);
+  assert.deepEqual(
+    withoutExtraStudent.map((card) => card.kind),
+    ["student", "guest"],
+  );
+  assert.equal(withoutExtraStudent[1]?.name, "Pat Tan");
+  const withoutFirstStudent = removeCard(roster, 0);
+  assert.deepEqual(
+    withoutFirstStudent.map((card) => [card.kind, card.name]),
+    [
+      ["guest", "Pat Tan"],
+      ["student", "Jo Tan"],
+    ],
+  );
+  assert.equal(removeCard(roster, 0).length, 2);
+  assert.equal(removeCard([{ name: "Ada Tan", kind: "student" }], 0).length, 0);
+});
+
+test("padding after a deleted first student does not turn a guest into a student", () => {
+  const leftover = padSeatGuests(
+    [
+      {
+        name: "Pat Tan",
+        kind: "guest",
+        graduatingStudent: "Ada Tan",
+        title: "Others",
+        dietary: "Fish",
+      },
+    ],
+    "Ada Tan",
+    1,
+  );
+  assert.equal(leftover.length, 1);
+  assert.equal(leftover[0]?.kind, "guest");
+  assert.equal(leftover[0]?.name, "Pat Tan");
 });
 
 test("two different students on two cards is allowed", () => {

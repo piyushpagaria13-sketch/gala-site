@@ -8,9 +8,11 @@ import { TABLE_CAPACITY } from "@/lib/floorplan";
 import {
   DUPLICATE_STUDENT_MESSAGE,
   duplicateStudentIndexes,
+  canDeleteCard,
   isGuestRosterComplete,
   padSeatGuests,
   padTableGuests,
+  removeCard,
 } from "@/lib/guestRoster";
 import type { Guest } from "@/lib/types";
 
@@ -37,7 +39,7 @@ export function GuestGrid() {
     ? padTableGuests(draft.guests, studentName)
     : padSeatGuests(draft.guests, studentName, reserved);
   const seededFor = useRef<string | null>(null);
-  const seedKey = isTable ? "table" : `seats:${reserved}`;
+  const seedKey = isTable ? "table" : "seats";
   const guests: Guest[] = (
     seededFor.current === seedKey ? draft.guests : start
   ).slice(0, TABLE_CAPACITY);
@@ -83,8 +85,7 @@ export function GuestGrid() {
   };
 
   const removeGuest = (index: number) => {
-    if (guests.length <= 1) return;
-    commit(guests.filter((_, i) => i !== index));
+    commit(removeCard(guests, index));
   };
 
   const takenStudentNames = new Set(
@@ -140,7 +141,7 @@ export function GuestGrid() {
               }
               onChange={(next) => update(i, next)}
               onDelete={
-                guests.length <= 1 ? undefined : () => removeGuest(i)
+                canDeleteCard() ? () => removeGuest(i) : undefined
               }
             />
           );

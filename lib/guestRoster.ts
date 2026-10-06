@@ -110,6 +110,17 @@ export function appendGuestCard(
   return [...guests, { name: "", kind }];
 }
 
+/** Every student and guest card can be removed. */
+export function canDeleteCard(): boolean {
+  return true;
+}
+
+/** Drop only that card. Remaining student and guest cards keep their kind. */
+export function removeCard(guests: Guest[], index: number): Guest[] {
+  if (index < 0 || index >= guests.length) return guests;
+  return guests.filter((_, i) => i !== index);
+}
+
 /**
  * Seed a seats booking to the count chosen in "How many seats?".
  */
@@ -123,15 +134,15 @@ export function padSeatGuests(
   if (kept.length === 0) {
     return startingGuestCards(studentName, n);
   }
-  const next = kept.map((guest, i) =>
-    i === 0
-      ? {
-          ...guest,
-          kind: "student" as const,
-          name: guest.name.trim() || studentName,
-        }
-      : guest,
-  );
+  const next = kept.map((guest, i) => {
+    const kind = guest.kind ?? (i === 0 ? "student" : "guest");
+    return {
+      ...guest,
+      kind,
+      name:
+        kind === "student" && !guest.name.trim() ? studentName : guest.name,
+    };
+  });
   while (next.length < n) {
     next.push({ name: "", kind: "guest" });
   }
@@ -150,15 +161,15 @@ export function padTableGuests(
   if (kept.length === 0) {
     return startingGuestCards(studentName, TABLE_CAPACITY);
   }
-  const next = kept.map((guest, i) =>
-    i === 0
-      ? {
-          ...guest,
-          kind: "student" as const,
-          name: guest.name.trim() || studentName,
-        }
-      : guest,
-  );
+  const next = kept.map((guest, i) => {
+    const kind = guest.kind ?? (i === 0 ? "student" : "guest");
+    return {
+      ...guest,
+      kind,
+      name:
+        kind === "student" && !guest.name.trim() ? studentName : guest.name,
+    };
+  });
   while (next.length < TABLE_CAPACITY) {
     next.push({ name: "", kind: "guest" });
   }

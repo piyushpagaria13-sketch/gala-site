@@ -108,7 +108,7 @@ type GuestCardProps = {
   nameOptions?: string[];
   /** Shown under the name field when this student is already on another card. */
   nameError?: string;
-  /** Remove this card. Hidden only when it is the last remaining card. */
+  /** Remove this student or guest card. */
   onDelete?: () => void;
 };
 
