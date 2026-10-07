@@ -6,12 +6,12 @@
 --    non-cancelled bookings)
 -- 3. reject if party > remaining OR table is blocked
 -- 4. reject if bus_seats > party_size or cars > party_size
--- 5. read comp_seats server-side; amount = max(party − comps, 0) × 218
---    (ignores any client-sent price)
+-- 5. read comp_seats server-side; apply at most one complimentary seat;
+--    amount = max(party − applied, 0) × 218 (ignores any client-sent price)
 -- 6. insert booking + guests; status paid and amount 0 when nothing is payable
 -- 7. generate ref GALA-NNNN and return it
--- 8. at most two live (non-cancelled) bookings per student; a third
---    raises name_already_booked
+-- 8. reserved complimentary recipients: one live booking; other students:
+--    two. The next attempt raises name_already_booked
 
 create or replace function create_booking(
   p_table_no integer,
@@ -93,13 +93,13 @@ begin
         from bookings
         where student_id = p_student_id
           and status is distinct from 'cancelled'
-      ) >= 2
+      ) >= case when v_comp > 0 then 1 else 2 end
     ) then
       raise exception 'name_already_booked';
     end if;
   end if;
 
-  v_payable := greatest(p_party_size - v_comp, 0);
+  v_payable := greatest(p_party_size - least(greatest(v_comp, 0), 1), 0);
   v_amount := v_payable * v_seat_price;
   v_status := case when v_amount = 0 then 'paid' else 'awaiting_payment' end;
   v_ref := 'GALA-' || lpad(nextval('booking_ref_seq')::text, 4, '0');

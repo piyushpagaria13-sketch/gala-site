@@ -5,7 +5,7 @@ import { useState } from "react";
 import { BusModal } from "@/components/flow/BusModal";
 import { SHOW_PAYNOW_QR } from "@/lib/bookingReceived";
 import { partySeatCount, useBookingDraft } from "@/lib/bookingDraft";
-import { bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
+import { appliedCompSeats, bookingTotal, payableSeats, SEAT_PRICE } from "@/lib/pricing";
 
 /**
  * "Almost there" — review before Confirm & pay. Left: YOUR SEATS card with
@@ -20,7 +20,7 @@ export function ReviewScreen() {
 
   const seats = partySeatCount(draft);
   const student = draft.student?.name ?? "";
-  const comps = draft.student?.compSeats ?? 0;
+  const comps = appliedCompSeats(draft.student?.compSeats ?? 0);
   const payable = payableSeats(seats, comps);
   const total = bookingTotal(seats, comps);
 
@@ -124,7 +124,7 @@ export function ReviewScreen() {
           </div>
           {comps > 0 && (
             <div className="mt-2 text-[14px] text-[#9a7f3e]">
-              − {comps} complimentary seats · S$0
+              − {comps} complimentary {comps === 1 ? "seat" : "seats"} · S$0
             </div>
           )}
           <div className="mt-[14px] h-px w-full bg-[#3a2f18]" />

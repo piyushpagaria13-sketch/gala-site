@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "./supabase";
 import type { Student } from "@/lib/types";
 import { studentMatchesExact } from "./studentMatch";
+import { isReservedRecipient } from "./reservedRecipients";
 import { liveBookingLimitReached } from "./studentBooking";
 
 export { sameStudentName, studentMatchesExact } from "./studentMatch";
@@ -141,8 +142,8 @@ export async function matchStudent(query: string): Promise<Student | null> {
 }
 
 /**
- * True when this class-list student already has two live (non-cancelled)
- * bookings. A third booking shows NAME_ALREADY_BOOKED_MESSAGE.
+ * True when this class-list student has used their live-booking allowance.
+ * Reserved complimentary recipients: one booking. Everyone else: two.
  * Local seed ids never match live rows.
  */
 export async function studentHasLiveBooking(studentId: string): Promise<boolean> {
@@ -150,13 +151,26 @@ export async function studentHasLiveBooking(studentId: string): Promise<boolean>
   if (!id || id.startsWith("local:")) return false;
   try {
     const supabase = getSupabaseClient();
+    const { data: student, error: studentError } = await supabase
+      .from("students")
+      .select("comp_seats, preferred_name, official_name, family_name, name")
+      .eq("id", id)
+      .maybeSingle();
+    if (studentError || !student) return false;
+    const reserved = isReservedRecipient({
+      name: student.name,
+      preferredName: student.preferred_name,
+      officialName: student.official_name,
+      familyName: student.family_name,
+      compSeats: student.comp_seats ?? 0,
+    });
     const { count, error } = await supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
       .eq("student_id", id)
       .neq("status", "cancelled");
     if (error) return false;
-    return liveBookingLimitReached(count ?? 0);
+    return liveBookingLimitReached(count ?? 0, reserved);
   } catch {
     return false;
   }

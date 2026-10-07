@@ -11,7 +11,7 @@ import {
 } from "../lib/sheetRows.ts";
 
 /**
- * Aryan Tan has 2 complimentary seats. Party 4 pays for 2 × S$218.
+ * Aryan Tan has reserved complimentary seats. Party 4 pays for 3 × S$218.
  * The Bookings tab is one row per guest, so 4 guests produce 4 rows.
  * The table count uses party_size, so the section still shows 4/10.
  */

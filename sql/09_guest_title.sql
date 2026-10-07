@@ -85,13 +85,13 @@ begin
         from bookings
         where student_id = p_student_id
           and status is distinct from 'cancelled'
-      ) >= 2
+      ) >= case when v_comp > 0 then 1 else 2 end
     ) then
       raise exception 'name_already_booked';
     end if;
   end if;
 
-  v_payable := greatest(p_party_size - v_comp, 0);
+  v_payable := greatest(p_party_size - least(greatest(v_comp, 0), 1), 0);
   v_amount := v_payable * v_seat_price;
   v_status := case when v_amount = 0 then 'paid' else 'awaiting_payment' end;
   v_ref := 'GALA-' || lpad(nextval('booking_ref_seq')::text, 4, '0');
