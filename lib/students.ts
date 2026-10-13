@@ -8,7 +8,7 @@ export { sameStudentName, studentMatchesExact } from "./studentMatch";
 
 /**
  * Offline fallback only. Complimentary tickets come from the live roster
- * (the 25 reserved recipients). These sample names never receive them.
+ * (the remaining reserved recipients). These sample names never receive them.
  */
 export const SEED_STUDENTS: Student[] = [
   { id: "local:aryan-tan", name: "Aryan Tan", grade: "12", compSeats: 0 },
@@ -71,15 +71,23 @@ function fromRow(row: StudentRow): Student {
   const preferredName = row.preferred_name ?? undefined;
   const officialName = row.official_name ?? undefined;
   const familyName = row.family_name ?? undefined;
+  const name = studentDisplayName({
+    name: row.name,
+    preferredName,
+    familyName,
+  });
   return {
     id: row.id,
-    name: studentDisplayName({
-      name: row.name,
-      preferredName,
-      familyName,
-    }),
+    name,
     grade: row.grade ?? undefined,
-    compSeats: row.comp_seats ?? 0,
+    compSeats: isReservedRecipient({
+      name,
+      preferredName,
+      officialName,
+      familyName,
+    })
+      ? 1
+      : 0,
     preferredName,
     officialName,
     familyName,
@@ -162,7 +170,6 @@ export async function studentHasLiveBooking(studentId: string): Promise<boolean>
       preferredName: student.preferred_name,
       officialName: student.official_name,
       familyName: student.family_name,
-      compSeats: student.comp_seats ?? 0,
     });
     const { count, error } = await supabase
       .from("bookings")

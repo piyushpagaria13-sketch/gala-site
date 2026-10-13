@@ -1,5 +1,5 @@
 -- Class of 2027 names that book at full price.
--- Complimentary tickets stay only on the 25 reserved recipients in 06_comp_recipients.sql.
+-- Complimentary tickets stay only on the remaining reserved recipients in 06_comp_recipients.sql.
 -- Re-runnable: upserts on (official_name, family_name) and never overwrites a reserved recipient's comp_seats.
 
 create unique index if not exists students_official_family_key
