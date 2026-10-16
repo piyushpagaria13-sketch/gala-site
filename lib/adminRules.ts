@@ -55,7 +55,7 @@ export function buttonState(
       confirm: false,
       resend: true,
       remind: false,
-      cancel: false,
+      cancel: true,
       dimmed: true,
     };
   }
@@ -64,7 +64,7 @@ export function buttonState(
       confirm: !sent,
       resend: true,
       remind: false,
-      cancel: false,
+      cancel: true,
       dimmed: false,
     };
   }

@@ -161,6 +161,14 @@ test("a failed sheet export does not undo the cancel", async () => {
   assert.equal(next.exportError, "Sheets unavailable");
 });
 
+test("cancel stays available on every admin row", () => {
+  assert.equal(buttonState("awaiting_payment").cancel, true);
+  assert.equal(buttonState("claims_paid").cancel, true);
+  assert.equal(buttonState("paid").cancel, true);
+  assert.equal(buttonState("paid", "2026-09-24T01:00:00.000Z").cancel, true);
+  assert.equal(buttonState("cancelled").cancel, true);
+});
+
 test("buttons follow status and cancelled rows are dimmed", () => {
   assert.deepEqual(buttonState("awaiting_payment"), {
     confirm: true,
@@ -180,14 +188,14 @@ test("buttons follow status and cancelled rows are dimmed", () => {
     confirm: false,
     resend: true,
     remind: false,
-    cancel: false,
+    cancel: true,
     dimmed: false,
   });
   assert.deepEqual(buttonState("cancelled"), {
     confirm: false,
     resend: true,
     remind: false,
-    cancel: false,
+    cancel: true,
     dimmed: true,
   });
   assert.equal(cancelCopy(booking()).refundNote, null);
@@ -198,7 +206,7 @@ test("a paid complimentary booking can still send the ticket until it is stamped
     confirm: true,
     resend: true,
     remind: false,
-    cancel: false,
+    cancel: true,
     dimmed: false,
   });
   const complimentary = booking({
@@ -224,7 +232,7 @@ test("a paid complimentary booking can still send the ticket until it is stamped
     confirm: false,
     resend: true,
     remind: false,
-    cancel: false,
+    cancel: true,
     dimmed: false,
   });
 });
@@ -271,7 +279,7 @@ test("resend sends even before the first confirm", async () => {
     confirm: false,
     resend: true,
     remind: false,
-    cancel: false,
+    cancel: true,
     dimmed: false,
   });
 });
